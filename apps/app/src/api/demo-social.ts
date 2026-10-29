@@ -2,8 +2,9 @@
  * Social features for demo mode. Three sample friends with a few posts make the feed, follows,
  * reactions and comments explorable without a server. The rules come from @bible-app/core.
  */
-import { canSee, checkContent, followOutcome, SOCIAL_LIMITS, withinRateLimit, type BadgeCode } from '@bible-app/core';
+import { canInGroup, canSee, checkContent, followOutcome, SOCIAL_LIMITS, withinRateLimit, type BadgeCode } from '@bible-app/core';
 import { fromKey, isValidRange } from '@bible-app/bible';
+import { roleIn, type GroupsState } from './demo-groups';
 import {
   AppError,
   type AppNotification,
@@ -14,6 +15,7 @@ import {
   type Milestone,
   type NotificationKind,
   type Person,
+  type PlanDetail,
   type Post,
   type Profile,
   type ReactionKind,
@@ -30,7 +32,7 @@ interface DemoPerson {
   badges: BadgeCode[];
 }
 
-interface DemoPost {
+export interface DemoPost {
   id: string;
   authorId: string;
   type: Post['type'];
@@ -41,9 +43,12 @@ interface DemoPost {
   milestone: Milestone | null;
   hidden: boolean;
   createdAt: string;
+  groupId?: string | null;
+  groupDay?: number | null;
+  pinnedAt?: string | null;
 }
 
-export interface SocialState {
+export interface SocialState extends Partial<GroupsState> {
   people: DemoPerson[];
   posts: DemoPost[];
   comments: Array<{ id: string; postId: string; authorId: string; body: string; createdAt: string }>;
@@ -51,7 +56,7 @@ export interface SocialState {
   follows: Array<{ followerId: string; followeeId: string; status: 'pending' | 'accepted' }>;
   blocks: Array<{ blockerId: string; blockedId: string }>;
   mutes: Array<{ muterId: string; mutedId: string }>;
-  notifications: Array<{ id: string; userId: string; actorId: string; kind: NotificationKind; postId: string | null; createdAt: string; read: boolean }>;
+  notifications: Array<{ id: string; userId: string; actorId: string; kind: NotificationKind; postId: string | null; groupId?: string | null; createdAt: string; read: boolean }>;
   reports: Array<{ target: string; targetId: string; reason: string; details: string; createdAt: string }>;
 }
 
@@ -100,6 +105,7 @@ interface Context {
   current(): Promise<{ me: Profile; social: SocialState }>;
   save(): Promise<void>;
   newId(): string;
+  plans(): Promise<PlanDetail[]>;
 }
 
 type SocialApi = Pick<
@@ -134,41 +140,53 @@ type SocialApi = Pick<
   | 'adminUnsuspend'
 >;
 
+export const personOf = (s: SocialState, me: Profile, id: string): Person => {
+  if (id === me.id) return { id: me.id, username: me.username, displayName: me.displayName, avatarUrl: null };
+  const p = s.people.find((x) => x.id === id);
+  return { id, username: p?.username ?? null, displayName: p?.displayName ?? '', avatarUrl: null };
+};
+export const blocked = (s: SocialState, a: string, b: string) =>
+  s.blocks.some((x) => (x.blockerId === a && x.blockedId === b) || (x.blockerId === b && x.blockedId === a));
+export const followState = (s: SocialState, from: string, to: string): FollowState =>
+  s.follows.find((f) => f.followerId === from && f.followeeId === to)?.status ?? 'none';
+export const visibilityOf = (s: SocialState, me: Profile, id: string): Visibility =>
+  id === me.id ? me.visibility : (s.people.find((p) => p.id === id)?.visibility ?? 'private');
+export const sees = (s: SocialState, me: Profile, owner: string) =>
+  canSee(visibilityOf(s, me, owner), {
+    isSelf: owner === me.id,
+    blocked: blocked(s, me.id, owner),
+    follows: followState(s, me.id, owner),
+    ownerSuspended: false,
+  });
+/** Group posts: members see everyone not blocked. Elsewhere: profile rules. */
+export const seesIn = (s: SocialState, me: Profile, p: DemoPost, authorId: string) =>
+  p.groupId ? authorId === me.id || !blocked(s, me.id, authorId) : sees(s, me, authorId);
+export const visiblePost = (s: SocialState, me: Profile, id: string) => {
+  const p = s.posts.find((x) => x.id === id);
+  if (!p || (p.hidden && p.authorId !== me.id)) throw new AppError('post_not_found');
+  if (p.groupId ? !roleIn(s, p.groupId, me.id) || !seesIn(s, me, p, p.authorId) : !sees(s, me, p.authorId)) throw new AppError('post_not_found');
+  return p;
+};
+export const toPost = (s: SocialState, me: Profile, p: DemoPost): Post => {
+  const count = (k: ReactionKind) => s.reactions.filter((r) => r.postId === p.id && r.kind === k).length;
+  const { groupId, groupDay, pinnedAt, ...rest } = p;
+  const group = groupId ? s.groups?.find((g) => g.id === groupId) : undefined;
+  const myRole = roleIn(s, groupId, me.id);
+  return {
+    ...rest,
+    group: group ? { id: group.id, name: group.name } : null,
+    groupDay: groupDay ?? null,
+    pinned: !!pinnedAt,
+    canModerate: canInGroup(myRole, 'remove_content'),
+    isMine: p.authorId === me.id,
+    author: personOf(s, me, p.authorId),
+    reactions: { amen: count('amen'), praying: count('praying'), encouraged: count('encouraged') },
+    myReaction: s.reactions.find((r) => r.postId === p.id && r.userId === me.id)?.kind ?? null,
+    commentCount: s.comments.filter((c) => c.postId === p.id && seesIn(s, me, p, c.authorId)).length,
+  };
+};
+
 export function createDemoSocial(ctx: Context): SocialApi {
-  const personOf = (s: SocialState, me: Profile, id: string): Person => {
-    if (id === me.id) return { id: me.id, username: me.username, displayName: me.displayName, avatarUrl: null };
-    const p = s.people.find((x) => x.id === id);
-    return { id, username: p?.username ?? null, displayName: p?.displayName ?? '', avatarUrl: null };
-  };
-  const blocked = (s: SocialState, a: string, b: string) =>
-    s.blocks.some((x) => (x.blockerId === a && x.blockedId === b) || (x.blockerId === b && x.blockedId === a));
-  const followState = (s: SocialState, from: string, to: string): FollowState =>
-    s.follows.find((f) => f.followerId === from && f.followeeId === to)?.status ?? 'none';
-  const visibilityOf = (s: SocialState, me: Profile, id: string): Visibility =>
-    id === me.id ? me.visibility : (s.people.find((p) => p.id === id)?.visibility ?? 'private');
-  const sees = (s: SocialState, me: Profile, owner: string) =>
-    canSee(visibilityOf(s, me, owner), {
-      isSelf: owner === me.id,
-      blocked: blocked(s, me.id, owner),
-      follows: followState(s, me.id, owner),
-      ownerSuspended: false,
-    });
-  const visiblePost = (s: SocialState, me: Profile, id: string) => {
-    const p = s.posts.find((x) => x.id === id);
-    if (!p || (p.hidden && p.authorId !== me.id) || !sees(s, me, p.authorId)) throw new AppError('post_not_found');
-    return p;
-  };
-  const toPost = (s: SocialState, me: Profile, p: DemoPost): Post => {
-    const count = (k: ReactionKind) => s.reactions.filter((r) => r.postId === p.id && r.kind === k).length;
-    return {
-      ...p,
-      isMine: p.authorId === me.id,
-      author: personOf(s, me, p.authorId),
-      reactions: { amen: count('amen'), praying: count('praying'), encouraged: count('encouraged') },
-      myReaction: s.reactions.find((r) => r.postId === p.id && r.userId === me.id)?.kind ?? null,
-      commentCount: s.comments.filter((c) => c.postId === p.id && sees(s, me, c.authorId)).length,
-    };
-  };
   const page = (s: SocialState, me: Profile, posts: DemoPost[], before?: string): FeedPage => {
     const sorted = posts.filter((p) => !before || p.createdAt < before).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     const size = SOCIAL_LIMITS.feedPageSize;
@@ -186,10 +204,12 @@ export function createDemoSocial(ctx: Context): SocialApi {
       const posts = s.posts.filter(
         (p) =>
           !p.hidden &&
+          p.groupDay == null &&
           p.createdAt > cutoff &&
-          (p.authorId === me.id || followState(s, me.id, p.authorId) === 'accepted') &&
           !s.mutes.some((m) => m.muterId === me.id && m.mutedId === p.authorId) &&
-          sees(s, me, p.authorId),
+          (p.groupId
+            ? !!roleIn(s, p.groupId, me.id) && seesIn(s, me, p, p.authorId)
+            : (p.authorId === me.id || followState(s, me.id, p.authorId) === 'accepted') && sees(s, me, p.authorId)),
       );
       return page(s, me, posts, before);
     },
@@ -197,7 +217,7 @@ export function createDemoSocial(ctx: Context): SocialApi {
     async getUserPosts(userId, before) {
       const { me, social: s } = await ctx.current();
       if (!sees(s, me, userId)) return { items: [], caughtUp: true };
-      return page(s, me, s.posts.filter((p) => p.authorId === userId && (!p.hidden || p.authorId === me.id)), before);
+      return page(s, me, s.posts.filter((p) => p.authorId === userId && !p.groupId && (!p.hidden || p.authorId === me.id)), before);
     },
 
     async getPost(id) {
@@ -207,31 +227,60 @@ export function createDemoSocial(ctx: Context): SocialApi {
 
     async createPost(input) {
       const { me, social: s } = await ctx.current();
+      let passage = input.passage ?? null;
+      const groupId = input.groupId ?? null;
+      const groupDay = input.groupDay ?? null;
+      if (groupId && !roleIn(s, groupId, me.id)) throw new AppError('group_not_found');
+      if (groupDay !== null) {
+        // A reply in a group plan day's thread is about that day's reading.
+        const g = s.groups?.find((x) => x.id === groupId);
+        const plan = g?.planId ? (await ctx.plans()).find((x) => x.id === g.planId) : undefined;
+        const reading = plan?.schedule.find((d) => d.day === groupDay)?.readings[0];
+        if (input.type !== 'reflection' || !reading) throw new AppError('invalid_post');
+        passage = reading;
+      }
       contentError(checkContent(input.body, { maxLength: SOCIAL_LIMITS.postMax, allowEmpty: input.type === 'verse' }));
       if (input.type !== 'prayer') {
-        const range = input.passage ? fromKey(input.passage) : null;
+        const range = passage ? fromKey(passage) : null;
         if (!range || !isValidRange(range)) throw new AppError('invalid_passage');
       }
       const mine = s.posts.filter((p) => p.authorId === me.id && p.type !== 'milestone');
-      if (!withinRateLimit(mine.map((p) => new Date(p.createdAt)), new Date(), 86_400_000, SOCIAL_LIMITS.postsPerDay)) {
-        throw new AppError('rate_limited');
+      if (groupDay === null) {
+        const counted = mine.filter((p) => p.groupDay == null).map((p) => new Date(p.createdAt));
+        if (!withinRateLimit(counted, new Date(), 86_400_000, SOCIAL_LIMITS.postsPerDay)) throw new AppError('rate_limited');
+      } else {
+        const counted = [...mine.filter((p) => p.groupDay != null), ...s.comments.filter((c) => c.authorId === me.id)].map((x) => new Date(x.createdAt));
+        if (!withinRateLimit(counted, new Date(), 3_600_000, SOCIAL_LIMITS.commentsPerHour)) throw new AppError('rate_limited');
       }
       const body = input.body.trim();
       const since = new Date(Date.now() - 86_400_000).toISOString();
-      if (mine.some((p) => p.createdAt > since && p.body === body && p.passage === (input.passage ?? null) && p.type === input.type)) {
+      if (
+        mine.some(
+          (p) =>
+            p.createdAt > since &&
+            p.body === body &&
+            p.passage === passage &&
+            p.type === input.type &&
+            (p.groupId ?? null) === groupId &&
+            (p.groupDay ?? null) === groupDay,
+        )
+      ) {
         throw new AppError('duplicate_post');
       }
       const post: DemoPost = {
         id: ctx.newId(),
         authorId: me.id,
         type: input.type,
-        passage: input.type === 'prayer' ? null : (input.passage ?? null),
+        passage: input.type === 'prayer' ? null : passage,
         translation: input.type === 'prayer' ? null : (input.translation ?? 'bsb'),
         verseText: input.type === 'verse' ? (input.verseText ?? '') : null,
         body,
         milestone: null,
         hidden: false,
         createdAt: new Date().toISOString(),
+        groupId,
+        groupDay,
+        pinnedAt: null,
       };
       s.posts.push(post);
       await ctx.save();
@@ -268,7 +317,7 @@ export function createDemoSocial(ctx: Context): SocialApi {
       const { me, social: s } = await ctx.current();
       const p = visiblePost(s, me, postId);
       return s.comments
-        .filter((c) => c.postId === postId && sees(s, me, c.authorId))
+        .filter((c) => c.postId === postId && seesIn(s, me, p, c.authorId))
         .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
         .map(
           (c): Comment => ({
@@ -276,7 +325,7 @@ export function createDemoSocial(ctx: Context): SocialApi {
             body: c.body,
             createdAt: c.createdAt,
             isMine: c.authorId === me.id,
-            canRemove: c.authorId === me.id || p.authorId === me.id,
+            canRemove: c.authorId === me.id || p.authorId === me.id || canInGroup(roleIn(s, p.groupId, me.id), 'remove_content'),
             author: personOf(s, me, c.authorId),
           }),
         );
@@ -298,7 +347,8 @@ export function createDemoSocial(ctx: Context): SocialApi {
       const { me, social: s } = await ctx.current();
       const c = s.comments.find((x) => x.id === id);
       const post = c ? s.posts.find((p) => p.id === c.postId) : undefined;
-      if (!c || (c.authorId !== me.id && post?.authorId !== me.id)) throw new AppError('comment_not_found');
+      const moderator = canInGroup(roleIn(s, post?.groupId, me.id), 'remove_content');
+      if (!c || (c.authorId !== me.id && post?.authorId !== me.id && !moderator)) throw new AppError('comment_not_found');
       s.comments = s.comments.filter((x) => x.id !== id);
       await ctx.save();
     },
@@ -422,6 +472,7 @@ export function createDemoSocial(ctx: Context): SocialApi {
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
         .map((n): AppNotification => {
           const post = n.postId ? s.posts.find((p) => p.id === n.postId) : undefined;
+          const group = n.groupId ? s.groups?.find((g) => g.id === n.groupId) : undefined;
           return {
             id: n.id,
             kind: n.kind,
@@ -429,6 +480,7 @@ export function createDemoSocial(ctx: Context): SocialApi {
             read: n.read,
             actor: personOf(s, me, n.actorId),
             post: post ? { id: post.id, type: post.type, passage: post.passage, body: post.body.slice(0, 120) } : null,
+            group: group ? { id: group.id, name: group.name } : null,
           };
         });
     },

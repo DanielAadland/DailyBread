@@ -1,4 +1,14 @@
-import type { BadgeCode, LocalDate, Visibility as CoreVisibility } from '@bible-app/core';
+import type {
+  BadgeCode,
+  GroupAccess,
+  GroupKind,
+  GroupPlanStatus,
+  GroupRole,
+  LocalDate,
+  MemberToday,
+  Visibility as CoreVisibility,
+} from '@bible-app/core';
+export type { GroupAccess, GroupKind, GroupPlanStatus, GroupRole, MemberToday };
 import type { BookId, SearchHit, TranslationId } from '@bible-app/bible';
 import type { ReadingPrefs } from '../theme/tokens';
 
@@ -173,6 +183,13 @@ export interface Post {
   reactions: Record<ReactionKind, number>;
   myReaction: ReactionKind | null;
   commentCount: number;
+  /** Set for posts shared in a group (only its members see them). */
+  group: { id: string; name: string } | null;
+  /** Set for replies in a group plan day's thread. */
+  groupDay: number | null;
+  pinned: boolean;
+  /** The viewer is an admin of the post's group (may pin and remove). */
+  canModerate: boolean;
 }
 
 export interface NewPost {
@@ -181,6 +198,9 @@ export interface NewPost {
   passage?: string;
   translation?: TranslationId;
   verseText?: string;
+  groupId?: string;
+  /** A reply in the group plan's thread for this day (type 'reflection'; the passage is the day's reading). */
+  groupDay?: number;
 }
 
 export interface FeedPage {
@@ -218,7 +238,7 @@ export interface PublicProfile extends Person {
   plans?: Array<{ title: string; days: number; completed: number }>;
 }
 
-export type NotificationKind = 'comment' | 'reaction' | 'follow' | 'follow_request' | 'follow_accepted';
+export type NotificationKind = 'comment' | 'reaction' | 'follow' | 'follow_request' | 'follow_accepted' | 'nudge';
 
 export interface AppNotification {
   id: string;
@@ -227,6 +247,7 @@ export interface AppNotification {
   read: boolean;
   actor: Person;
   post: { id: string; type: PostType; passage: string | null; body: string } | null;
+  group: { id: string; name: string } | null;
 }
 
 export type ReportTarget = 'post' | 'comment' | 'user';
@@ -244,7 +265,56 @@ export interface ModerationItem {
   preview: { body: string | null; verseText?: string | null; removed?: boolean; suspendedUntil?: string | null; author: Person | null };
 }
 
-export type RealtimeTopic = { kind: 'post'; postId: string } | { kind: 'notifications' };
+export type RealtimeTopic = { kind: 'post'; postId: string } | { kind: 'notifications' } | { kind: 'group'; groupId: string };
+
+export interface GroupPlanInfo {
+  id: string;
+  slug: string;
+  title: string;
+  days: number;
+  start: LocalDate;
+  status: GroupPlanStatus;
+  /** Today's group day (null before the start and after the end). */
+  day: number | null;
+  readings: string[] | null;
+}
+
+export interface Group {
+  id: string;
+  name: string;
+  description: string;
+  kind: GroupKind;
+  access: GroupAccess;
+  createdAt: string;
+  memberCount: number;
+  /** Null when the viewer isn't a member (a preview). */
+  myRole: GroupRole | null;
+  inviteCode: string | null;
+  plan: GroupPlanInfo | null;
+  readersToday: number;
+  streak: number;
+  myToday: MemberToday | null;
+}
+
+export interface GroupInput {
+  name: string;
+  description: string;
+  kind: GroupKind;
+  access: GroupAccess;
+}
+
+export interface GroupMember extends Person {
+  role: GroupRole;
+  joinedAt: string;
+  today: MemberToday;
+  isMe: boolean;
+  canNudge: boolean;
+}
+
+export interface GroupPostsPage extends FeedPage {
+  /** Only on the first page. */
+  pinned: Post[];
+}
 
 export interface PushSubscriptionInput {
   endpoint: string;
@@ -333,6 +403,28 @@ export interface Backend {
   adminReports(status: 'open' | 'actioned' | 'dismissed'): Promise<ModerationItem[]>;
   adminResolve(target: ReportTarget, targetId: string, action: ModerationAction, note?: string): Promise<void>;
   adminUnsuspend(userId: string): Promise<void>;
+
+  // Groups
+  listMyGroups(): Promise<Group[]>;
+  findGroups(query: string): Promise<Group[]>;
+  getGroup(id: string): Promise<Group>;
+  getGroupByInvite(code: string): Promise<Group>;
+  createGroup(input: GroupInput & { planId?: string; planStart?: LocalDate }): Promise<Group>;
+  updateGroup(id: string, input: GroupInput): Promise<Group>;
+  setGroupPlan(id: string, planId: string | null, start: LocalDate | null): Promise<Group>;
+  resetGroupInvite(id: string): Promise<string>;
+  deleteGroup(id: string): Promise<void>;
+  joinGroup(ref: { id?: string; code?: string }): Promise<Group>;
+  leaveGroup(id: string): Promise<void>;
+  listGroupMembers(id: string): Promise<GroupMember[]>;
+  setMemberRole(groupId: string, userId: string, role: 'admin' | 'member'): Promise<void>;
+  transferGroup(groupId: string, userId: string): Promise<void>;
+  removeGroupMember(groupId: string, userId: string): Promise<void>;
+  nudgeMember(groupId: string, userId: string): Promise<void>;
+  getGroupPosts(id: string, before?: string): Promise<GroupPostsPage>;
+  getGroupDay(id: string, day: number): Promise<Post[]>;
+  pinGroupPost(postId: string, pinned: boolean): Promise<void>;
+  removeGroupPost(postId: string): Promise<void>;
 }
 
 /** Errors the UI knows how to explain; `code` maps to `errors.<code>` in the translation files. */

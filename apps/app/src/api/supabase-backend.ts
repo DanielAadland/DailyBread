@@ -10,6 +10,13 @@ import {
   type Comment,
   type FeedPage,
   type FollowState,
+  type Group,
+  type GroupAccess,
+  type GroupKind,
+  type GroupMember,
+  type GroupPlanInfo,
+  type GroupRole,
+  type MemberToday,
   type Milestone,
   type ModerationItem,
   type Person,
@@ -71,6 +78,19 @@ const KNOWN_ERRORS = [
   'report_target_not_found',
   'not_admin',
   'invalid_action',
+  'group_not_found',
+  'invite_not_found',
+  'group_name_too_short',
+  'group_name_too_long',
+  'invalid_group_plan',
+  'group_limit_reached',
+  'group_full',
+  'owner_cannot_leave',
+  'member_not_found',
+  'already_read',
+  'too_many_pinned',
+  // Last: other codes contain it (links_not_allowed).
+  'not_allowed',
 ];
 
 function toAppError(err: unknown): AppError {
@@ -189,6 +209,40 @@ function mapPost(r: Row): Post {
     reactions: { amen: Number(reactions.amen ?? 0), praying: Number(reactions.praying ?? 0), encouraged: Number(reactions.encouraged ?? 0) },
     myReaction: (r.my_reaction as ReactionKind | null) ?? null,
     commentCount: Number(r.comment_count ?? 0),
+    group: r.group ? { id: (r.group as Row).id as string, name: (r.group as Row).name as string } : null,
+    groupDay: r.group_day == null ? null : Number(r.group_day),
+    pinned: Boolean(r.pinned),
+    canModerate: Boolean(r.can_moderate),
+  };
+}
+
+function mapGroup(r: Row): Group {
+  const plan = r.plan as Row | null;
+  return {
+    id: r.id as string,
+    name: r.name as string,
+    description: (r.description as string) ?? '',
+    kind: r.kind as GroupKind,
+    access: r.access as GroupAccess,
+    createdAt: r.created_at as string,
+    memberCount: Number(r.member_count ?? 0),
+    myRole: (r.my_role as GroupRole | null) ?? null,
+    inviteCode: (r.invite_code as string | null) ?? null,
+    plan: plan
+      ? {
+          id: plan.id as string,
+          slug: plan.slug as string,
+          title: plan.title as string,
+          days: Number(plan.days),
+          start: plan.start as string,
+          status: plan.status as GroupPlanInfo['status'],
+          day: plan.day == null ? null : Number(plan.day),
+          readings: (plan.readings as string[] | null) ?? null,
+        }
+      : null,
+    readersToday: Number(r.readers_today ?? 0),
+    streak: Number(r.streak ?? 0),
+    myToday: (r.my_today as MemberToday | null) ?? null,
   };
 }
 
@@ -510,6 +564,8 @@ export function createSupabaseBackend(url: string, anonKey: string): Backend {
             p_passage: input.passage ?? null,
             p_translation: input.translation ?? null,
             p_verse_text: input.verseText ?? null,
+            p_group: input.groupId ?? null,
+            p_group_day: input.groupDay ?? null,
           }),
         )) as Row,
       );
@@ -616,6 +672,7 @@ export function createSupabaseBackend(url: string, anonKey: string): Backend {
           read: Boolean(r.read),
           actor: mapPerson(r.actor as Row),
           post: r.post ? { id: (r.post as Row).id as string, type: (r.post as Row).type as PostType, passage: ((r.post as Row).passage as string | null) ?? null, body: ((r.post as Row).body as string) ?? '' } : null,
+          group: r.group ? { id: (r.group as Row).id as string, name: (r.group as Row).name as string } : null,
         }),
       );
     },
@@ -634,6 +691,10 @@ export function createSupabaseBackend(url: string, anonKey: string): Backend {
             .channel(`post:${topic.postId}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'comments', filter }, onChange)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'reactions', filter }, onChange);
+        } else if (topic.kind === 'group') {
+          channel = sb
+            .channel(`group:${topic.groupId}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'posts', filter: `group_id=eq.${topic.groupId}` }, onChange);
         } else {
           const id = await uid().catch(() => null);
           if (!id || stopped) return;
@@ -677,6 +738,92 @@ export function createSupabaseBackend(url: string, anonKey: string): Backend {
 
     async adminUnsuspend(userId) {
       await run(sb.rpc('admin_unsuspend', { p_user: userId }));
+    },
+
+    async listMyGroups() {
+      return ((await run(sb.rpc('my_groups'))) as Row[]).map(mapGroup);
+    },
+    async findGroups(query) {
+      return ((await run(sb.rpc('find_groups', { p_query: query }))) as Row[]).map(mapGroup);
+    },
+    async getGroup(id) {
+      return mapGroup((await run(sb.rpc('get_group', { p_group: id }))) as Row);
+    },
+    async getGroupByInvite(code) {
+      return mapGroup((await run(sb.rpc('get_group_by_invite', { p_code: code }))) as Row);
+    },
+    async createGroup(input) {
+      return mapGroup(
+        (await run(
+          sb.rpc('create_group', {
+            p_name: input.name,
+            p_description: input.description,
+            p_kind: input.kind,
+            p_access: input.access,
+            p_plan: input.planId ?? null,
+            p_plan_start: input.planStart ?? null,
+          }),
+        )) as Row,
+      );
+    },
+    async updateGroup(id, input) {
+      return mapGroup(
+        (await run(
+          sb.rpc('update_group', { p_group: id, p_name: input.name, p_description: input.description, p_kind: input.kind, p_access: input.access }),
+        )) as Row,
+      );
+    },
+    async setGroupPlan(id, planId, start) {
+      return mapGroup((await run(sb.rpc('set_group_plan', { p_group: id, p_plan: planId, p_start: start }))) as Row);
+    },
+    async resetGroupInvite(id) {
+      return (await run(sb.rpc('reset_group_invite', { p_group: id }))) as string;
+    },
+    async deleteGroup(id) {
+      await run(sb.rpc('delete_group', { p_group: id }));
+    },
+    async joinGroup(ref) {
+      return mapGroup((await run(sb.rpc('join_group', { p_group: ref.id ?? null, p_code: ref.code ?? null }))) as Row);
+    },
+    async leaveGroup(id) {
+      await run(sb.rpc('leave_group', { p_group: id }));
+    },
+    async listGroupMembers(id) {
+      return ((await run(sb.rpc('group_members_list', { p_group: id }))) as Row[]).map(
+        (r): GroupMember => ({
+          ...mapPerson(r),
+          role: r.role as GroupRole,
+          joinedAt: r.joined_at as string,
+          today: r.today as MemberToday,
+          isMe: Boolean(r.is_me),
+          canNudge: Boolean(r.can_nudge),
+        }),
+      );
+    },
+    async setMemberRole(groupId, userId, role) {
+      await run(sb.rpc('set_member_role', { p_group: groupId, p_user: userId, p_role: role }));
+    },
+    async transferGroup(groupId, userId) {
+      await run(sb.rpc('transfer_group', { p_group: groupId, p_user: userId }));
+    },
+    async removeGroupMember(groupId, userId) {
+      await run(sb.rpc('remove_group_member', { p_group: groupId, p_user: userId }));
+    },
+    async nudgeMember(groupId, userId) {
+      await run(sb.rpc('nudge_member', { p_group: groupId, p_user: userId }));
+    },
+    async getGroupPosts(id, before) {
+      const r = (await run(sb.rpc('get_group_posts', { p_group: id, p_before: before ?? null, p_limit: 20 }))) as Row;
+      return { ...mapFeed(r), pinned: ((r.pinned as Row[]) ?? []).map(mapPost) };
+    },
+    async getGroupDay(id, day) {
+      return ((await run(sb.rpc('get_group_day', { p_group: id, p_day: day }))) as Row[]).map(mapPost);
+    },
+    async pinGroupPost(postId, pinned) {
+      await run(sb.rpc('pin_group_post', { p_post: postId, p_pinned: pinned }));
+    },
+    async removeGroupPost(postId) {
+      await run(sb.rpc('remove_group_post', { p_post: postId }));
     },
   };
 }

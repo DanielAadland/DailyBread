@@ -17,7 +17,8 @@ import {
   type StreakState,
 } from '@bible-app/core';
 import { BOOKS, fromKey, isValidRange, type BookId } from '@bible-app/bible';
-import { createDemoSocial, seedSocial, type SocialState } from './demo-social';
+import { createDemoGroups, ensureGroups, type GroupsState } from './demo-groups';
+import { createDemoSocial, seedSocial, toPost, type SocialState } from './demo-social';
 import {
   AppError,
   type Backend,
@@ -240,19 +241,55 @@ export function createDemoBackend(assetBaseUrl: string): Backend {
     });
   }
 
+  /** The signed-in user's social state, with the sample groups added on first use. */
+  async function socialState(s: DemoState & { profile: Profile }): Promise<SocialState & GroupsState> {
+    s.social ??= seedSocial(s.profile.id);
+    if (!s.social.groups || !s.social.groupMembers) {
+      const psalms = await plans()
+        .then((list) => list.find((p) => p.slug === 'psalms-30')?.id ?? null)
+        .catch(() => null);
+      ensureGroups(s.social, s.profile.id, today(s), psalms);
+      await save();
+    }
+    return s.social as SocialState & GroupsState;
+  }
+
   const social = createDemoSocial({
     async current() {
       const s = await signedIn();
-      s.social ??= seedSocial(s.profile.id);
-      return { me: s.profile, social: s.social };
+      return { me: s.profile, social: await socialState(s) };
     },
     save,
     newId,
+    plans,
   });
+
+  const groups = createDemoGroups(
+    {
+      async current() {
+        const s = await signedIn();
+        settle(s);
+        return {
+          me: s.profile,
+          social: await socialState(s),
+          today: today(s),
+          myReadDates: Object.entries(s.activity)
+            .filter(([, source]) => source !== 'freeze')
+            .map(([date]) => date),
+          myCompletedDays: (planId: string) => Object.keys(s.enrolments.find((e) => e.planId === planId)?.completed ?? {}).map(Number),
+        };
+      },
+      plans,
+      save,
+      newId,
+    },
+    { toPost },
+  );
 
   return {
     kind: 'demo',
     ...social,
+    ...groups,
 
     auth: {
       async getSession() {

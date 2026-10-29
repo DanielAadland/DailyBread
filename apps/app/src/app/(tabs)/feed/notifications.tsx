@@ -21,6 +21,7 @@ const ICONS: Record<NotificationKind, ComponentProps<typeof Ionicons>['name']> =
   follow: 'person-add-outline',
   follow_request: 'person-add-outline',
   follow_accepted: 'checkmark-circle-outline',
+  nudge: 'sunny-outline',
 };
 
 /** Recent activity around you. Opening the screen marks everything as read. */
@@ -74,11 +75,12 @@ function NotificationRow({ item, isNew }: { item: AppNotification; isNew: boolea
   const requests = useConnections('requests');
   const respond = useRespondToFollow();
   const name = item.actor.displayName || item.actor.username || t('profile.noName');
-  const text = t(`notifications.kinds.${item.kind}`, { name });
+  const text = t(`notifications.kinds.${item.kind}`, { name, group: item.group?.name ?? '' });
   const stillPending = item.kind === 'follow_request' && (requests.data ?? []).some((p) => p.id === item.actor.id);
 
   const open = () => {
     if (item.post) router.push(`/feed/post/${item.post.id}`);
+    else if (item.group) router.push(`/feed/groups/${item.group.id}`);
     else if (item.actor.username) router.push(`/feed/u/${item.actor.username}`);
   };
 

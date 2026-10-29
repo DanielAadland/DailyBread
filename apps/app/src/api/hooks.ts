@@ -5,6 +5,8 @@ import { useBackend } from './BackendProvider';
 import type {
   Backend,
   FeedPage,
+  GroupInput,
+  GroupPostsPage,
   HighlightColor,
   ModerationAction,
   NewPost,
@@ -39,11 +41,22 @@ export const keys = {
   blocked: ['blocked'] as const,
   notifications: ['notifications'] as const,
   adminReports: (status: string) => ['admin-reports', status] as const,
+  myGroups: ['my-groups'] as const,
+  findGroups: (query: string) => ['find-groups', query] as const,
+  group: (id: string) => ['group', id] as const,
+  groupInvite: (code: string) => ['group-invite', code] as const,
+  groupMembers: (id: string) => ['group-members', id] as const,
+  groupPosts: (id: string) => ['group-posts', id] as const,
+  groupDay: (id: string, day: number) => ['group-day', id, day] as const,
 };
 
 const afterReading = (qc: QueryClient) =>
   Promise.all([
     qc.invalidateQueries({ queryKey: keys.today }),
+    // Reading changes "who has read today" and group streaks.
+    qc.invalidateQueries({ queryKey: keys.myGroups }),
+    qc.invalidateQueries({ queryKey: ['group'] }),
+    qc.invalidateQueries({ queryKey: ['group-members'] }),
     qc.invalidateQueries({ queryKey: keys.enrolments }),
     qc.invalidateQueries({ queryKey: keys.badges }),
   ]);
@@ -246,7 +259,7 @@ export function useComments(postId: string) {
 export function useRealtime(topic: RealtimeTopic | null, queryKeys: ReadonlyArray<readonly unknown[]>) {
   const { backend } = useBackend();
   const qc = useQueryClient();
-  const id = topic ? (topic.kind === 'post' ? `post:${topic.postId}` : 'notifications') : null;
+  const id = topic ? (topic.kind === 'post' ? `post:${topic.postId}` : topic.kind === 'group' ? `group:${topic.groupId}` : 'notifications') : null;
   useEffect(() => {
     if (!topic) return;
     return backend.subscribe(topic, () => {
@@ -264,10 +277,25 @@ function replacePost(qc: QueryClient, post: Post) {
     data && { ...data, pages: data.pages.map((p) => ({ ...p, items: p.items.map((i) => (i.id === post.id ? post : i)) })) };
   qc.setQueriesData<InfiniteData<FeedPage>>({ queryKey: keys.feed }, update);
   qc.setQueriesData<InfiniteData<FeedPage>>({ queryKey: ['user-posts'] }, update);
+  qc.setQueriesData<InfiniteData<GroupPostsPage>>(
+    { queryKey: ['group-posts'] },
+    (data) =>
+      data && {
+        ...data,
+        pages: data.pages.map((p) => ({
+          ...p,
+          pinned: p.pinned.map((i) => (i.id === post.id ? post : i)),
+          items: p.items.map((i) => (i.id === post.id ? post : i)),
+        })),
+      },
+  );
+  qc.setQueriesData<Post[]>({ queryKey: ['group-day'] }, (data) => data?.map((i) => (i.id === post.id ? post : i)));
 }
 
 const afterPostsChanged = (qc: QueryClient) =>
-  Promise.all([qc.invalidateQueries({ queryKey: keys.feed }), qc.invalidateQueries({ queryKey: ['user-posts'] })]);
+  Promise.all(
+    [keys.feed, ['user-posts'], ['group-posts'], ['group-day']].map((queryKey) => qc.invalidateQueries({ queryKey })),
+  );
 
 export function useCreatePost() {
   const { backend } = useBackend();
@@ -411,3 +439,83 @@ export function useAdminUnsuspend() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-reports'] }),
   });
 }
+
+// Groups ------------------------------------------------------------------------------------
+
+export function useMyGroups() {
+  const { backend, session } = useBackend();
+  return useQuery({ queryKey: keys.myGroups, queryFn: () => backend.listMyGroups(), enabled: !!session });
+}
+
+export function useFindGroups(query: string) {
+  const { backend, session } = useBackend();
+  const q = query.trim();
+  return useQuery({ queryKey: keys.findGroups(q), queryFn: () => backend.findGroups(q), enabled: !!session });
+}
+
+export function useGroup(id: string) {
+  const { backend, session } = useBackend();
+  return useQuery({ queryKey: keys.group(id), queryFn: () => backend.getGroup(id), enabled: !!session && !!id });
+}
+
+export function useGroupByInvite(code: string) {
+  const { backend, session } = useBackend();
+  return useQuery({ queryKey: keys.groupInvite(code), queryFn: () => backend.getGroupByInvite(code), enabled: !!session && !!code, retry: false });
+}
+
+export function useGroupMembers(id: string) {
+  const { backend, session } = useBackend();
+  return useQuery({ queryKey: keys.groupMembers(id), queryFn: () => backend.listGroupMembers(id), enabled: !!session && !!id });
+}
+
+const groupNextBefore = (last: GroupPostsPage) => (last.caughtUp ? undefined : last.items[last.items.length - 1]?.createdAt);
+
+/** The group's posts in pages of 20 (pinned ones come with the first page); it ends. */
+export function useGroupPosts(id: string) {
+  const { backend, session } = useBackend();
+  const query = useInfiniteQuery({
+    queryKey: keys.groupPosts(id),
+    queryFn: ({ pageParam }) => backend.getGroupPosts(id, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: groupNextBefore,
+    enabled: !!session && !!id,
+  });
+  useRealtime(session && id ? { kind: 'group', groupId: id } : null, [keys.groupPosts(id), ['group-day', id]]);
+  return query;
+}
+
+export function useGroupDay(id: string, day: number) {
+  const { backend, session } = useBackend();
+  return useQuery({ queryKey: keys.groupDay(id, day), queryFn: () => backend.getGroupDay(id, day), enabled: !!session && !!id && day > 0 });
+}
+
+const afterGroupsChanged = (qc: QueryClient) =>
+  Promise.all(
+    [keys.myGroups, ['find-groups'], ['group'], ['group-invite'], ['group-members'], ['group-posts'], ['group-day'], keys.feed].map((queryKey) =>
+      qc.invalidateQueries({ queryKey }),
+    ),
+  );
+
+function useGroupMutation<V, R = unknown>(fn: (backend: Backend, v: V) => Promise<R>) {
+  const { backend } = useBackend();
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: (v: V) => fn(backend, v), onSuccess: () => afterGroupsChanged(qc) });
+}
+
+export const useCreateGroup = () =>
+  useGroupMutation((b, v: GroupInput & { planId?: string; planStart?: string }) => b.createGroup(v));
+export const useUpdateGroup = () => useGroupMutation((b, v: { id: string; input: GroupInput }) => b.updateGroup(v.id, v.input));
+export const useSetGroupPlan = () =>
+  useGroupMutation((b, v: { id: string; planId: string | null; start: string | null }) => b.setGroupPlan(v.id, v.planId, v.start));
+export const useResetGroupInvite = () => useGroupMutation((b, id: string) => b.resetGroupInvite(id));
+export const useDeleteGroup = () => useGroupMutation((b, id: string) => b.deleteGroup(id));
+export const useJoinGroup = () => useGroupMutation((b, ref: { id?: string; code?: string }) => b.joinGroup(ref));
+export const useLeaveGroup = () => useGroupMutation((b, id: string) => b.leaveGroup(id));
+export const useSetMemberRole = () =>
+  useGroupMutation((b, v: { groupId: string; userId: string; role: 'admin' | 'member' }) => b.setMemberRole(v.groupId, v.userId, v.role));
+export const useTransferGroup = () => useGroupMutation((b, v: { groupId: string; userId: string }) => b.transferGroup(v.groupId, v.userId));
+export const useRemoveGroupMember = () =>
+  useGroupMutation((b, v: { groupId: string; userId: string }) => b.removeGroupMember(v.groupId, v.userId));
+export const useNudgeMember = () => useGroupMutation((b, v: { groupId: string; userId: string }) => b.nudgeMember(v.groupId, v.userId));
+export const usePinGroupPost = () => useGroupMutation((b, v: { postId: string; pinned: boolean }) => b.pinGroupPost(v.postId, v.pinned));
+export const useRemoveGroupPost = () => useGroupMutation((b, postId: string) => b.removeGroupPost(postId));
