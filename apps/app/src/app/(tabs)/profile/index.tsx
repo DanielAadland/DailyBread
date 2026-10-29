@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { BADGE_CODES } from '@bible-app/core';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
+import type { ComponentProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useBadges, useEnrolments, usePlans, useProfile, useToday } from '../../../api/hooks';
@@ -104,7 +105,21 @@ export default function ProfileScreen() {
       <View>
         <LinkRow href="/profile/saved" icon="bookmark-outline" label={t('profile.saved')} />
         <Divider />
+        <LinkRow href="/feed/people?tab=following" icon="people-outline" label={t('profile.friends')} />
+        <Divider />
+        {p.username ? (
+          <>
+            <LinkRow href={`/feed/u/${p.username}`} icon="eye-outline" label={t('profile.asOthersSee')} />
+            <Divider />
+          </>
+        ) : null}
         <LinkRow href="/profile/settings" icon="settings-outline" label={t('profile.settings')} />
+        {p.isAdmin ? (
+          <>
+            <Divider />
+            <LinkRow href="/profile/moderation" icon="shield-checkmark-outline" label={t('moderation.title')} />
+          </>
+        ) : null}
       </View>
     </Screen>
   );
@@ -121,7 +136,7 @@ function Stat({ value, label }: { value: number; label: string }) {
   );
 }
 
-function LinkRow({ href, icon, label }: { href: '/profile/saved' | '/profile/settings'; icon: 'bookmark-outline' | 'settings-outline'; label: string }) {
+function LinkRow({ href, icon, label }: { href: Href; icon: ComponentProps<typeof Ionicons>['name']; label: string }) {
   const { colors } = useTheme();
   const router = useRouter();
   return (

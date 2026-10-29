@@ -76,7 +76,17 @@ export default function PlanDayScreen() {
       </Txt>
 
       {result ? (
-        <Celebration result={result} day={day} total={p.days} onToday={() => router.navigate('/')} onNext={day < p.days ? () => router.replace(`/plans/${p.slug}/${day + 1}`) : undefined} />
+        <Celebration
+          result={result}
+          day={day}
+          total={p.days}
+          onToday={() => router.navigate('/')}
+          onShare={() => {
+            const params = new URLSearchParams({ type: 'reflection', passage: entry.readings[0] ?? '' });
+            if (reflection.trim()) params.set('body', reflection.trim());
+            router.push(`/feed/compose?${params.toString()}`);
+          }}
+          onNext={day < p.days ? () => router.replace(`/plans/${p.slug}/${day + 1}`) : undefined} />
       ) : !enrolment ? (
         <View style={styles.panel}>
           <Txt>{t('plans.notStarted')}</Txt>
@@ -155,7 +165,21 @@ function groupByChapter<T extends { chapter: number }>(verses: T[]): Array<{ cha
   return out;
 }
 
-function Celebration({ result, day, total, onToday, onNext }: { result: CompleteResult; day: number; total: number; onToday: () => void; onNext?: () => void }) {
+function Celebration({
+  result,
+  day,
+  total,
+  onToday,
+  onShare,
+  onNext,
+}: {
+  result: CompleteResult;
+  day: number;
+  total: number;
+  onToday: () => void;
+  onShare: () => void;
+  onNext?: () => void;
+}) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   return (
@@ -177,6 +201,7 @@ function Celebration({ result, day, total, onToday, onNext }: { result: Complete
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SPACE.sm, justifyContent: 'center' }}>
         <Button label={t('plans.backToToday')} onPress={onToday} />
         {onNext && !result.finishedPlan ? <Button label={t('plans.nextDayOf', { day: day + 1, total })} variant="secondary" onPress={onNext} /> : null}
+        <Button label={t('plans.shareReflection')} icon="share-social-outline" variant="quiet" onPress={onShare} />
       </View>
     </View>
   );

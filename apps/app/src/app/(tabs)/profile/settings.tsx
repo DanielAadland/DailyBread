@@ -4,12 +4,13 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, StyleSheet, View } from 'react-native';
 import { useBackend } from '../../../api/BackendProvider';
-import { useProfile, useUpdateProfile } from '../../../api/hooks';
+import { useBlocked, useProfile, useUnblock, useUpdateProfile } from '../../../api/hooks';
 import type { Visibility } from '../../../api/types';
 import { useTheme } from '../../../theme/ThemeProvider';
 import { RADIUS, SPACE } from '../../../theme/tokens';
 import { Button } from '../../../ui/Button';
-import { Divider, errorMessage, Notice, Section, Segmented } from '../../../ui/misc';
+import { Divider, errorMessage, Notice, Section, Segmented, ToggleRow } from '../../../ui/misc';
+import { PersonRow } from '../../../ui/PersonRow';
 import { ReadingSettings } from '../../../ui/ReadingSettings';
 import { ReminderSettings } from '../../../ui/ReminderSettings';
 import { Screen } from '../../../ui/Screen';
@@ -36,6 +37,10 @@ export default function SettingsScreen() {
       <Divider />
       <Section title={t('reminders.title')}>
         <ReminderSettings />
+      </Section>
+      <Divider />
+      <Section title={t('settings.community')}>
+        <CommunitySettings />
       </Section>
       <Divider />
       <Section title={t('settings.privacy')}>
@@ -108,6 +113,46 @@ function ProfileForm() {
         <Button label={t('settings.saveProfile')} onPress={save} loading={update.isPending} />
         {saved ? <Txt tone="mist">{t('settings.profileSaved')}</Txt> : null}
       </View>
+    </View>
+  );
+}
+
+function CommunitySettings() {
+  const { t } = useTranslation();
+  const router = useRouter();
+  const profile = useProfile();
+  const update = useUpdateProfile();
+  const blocked = useBlocked();
+  const unblock = useUnblock();
+
+  return (
+    <View style={{ gap: SPACE.md }}>
+      {profile.data ? (
+        <ToggleRow
+          label={t('settings.shareMilestones')}
+          hint={t('settings.shareMilestonesHint')}
+          value={profile.data.shareMilestones}
+          onChange={(shareMilestones) => update.mutate({ shareMilestones })}
+        />
+      ) : null}
+      <Txt variant="label">{t('settings.blockedTitle')}</Txt>
+      {blocked.data && blocked.data.length > 0 ? (
+        <View role="list">
+          {blocked.data.map((p) => {
+            const name = p.displayName || p.username || t('profile.noName');
+            return (
+              <PersonRow key={p.id} person={p}>
+                <Button label={t('settings.unblock')} variant="secondary" accessibilityLabel={t('settings.unblockLabel', { name })} onPress={() => unblock.mutate(p.id)} />
+              </PersonRow>
+            );
+          })}
+        </View>
+      ) : (
+        <Txt tone="mist">{t('settings.blockedEmpty')}</Txt>
+      )}
+      <Txt variant="small" tone="tide" accessibilityRole="link" onPress={() => router.push('/legal/guidelines')}>
+        {t('settings.readGuidelines')}
+      </Txt>
     </View>
   );
 }

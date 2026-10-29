@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBackend } from '../../api/BackendProvider';
+import { useNotifications } from '../../api/hooks';
 import { useTheme } from '../../theme/ThemeProvider';
 import { FONTS, LAYOUT, RADIUS, SPACE } from '../../theme/tokens';
 import { Logo } from '../../ui/Logo';
@@ -16,6 +17,7 @@ type IconName = ComponentProps<typeof Ionicons>['name'];
 const TABS: Array<{ name: string; label: string; icon: IconName; iconActive: IconName }> = [
   { name: 'index', label: 'tabs.today', icon: 'sunny-outline', iconActive: 'sunny' },
   { name: 'read', label: 'tabs.read', icon: 'book-outline', iconActive: 'book' },
+  { name: 'feed', label: 'tabs.feed', icon: 'people-outline', iconActive: 'people' },
   { name: 'plans', label: 'tabs.plans', icon: 'calendar-outline', iconActive: 'calendar' },
   { name: 'profile', label: 'tabs.profile', icon: 'person-outline', iconActive: 'person' },
 ];
@@ -53,6 +55,8 @@ function TabBar({ state, navigateToTab, wide }: TabBarProps) {
   const { colors } = useTheme();
   const { backend } = useBackend();
   const insets = useSafeAreaInsets();
+  const notifications = useNotifications();
+  const unread = (notifications.data ?? []).some((n) => !n.read);
 
   const items = state.routes.map((route, index) => {
     const tab = TABS.find((x) => x.name === route.name);
@@ -64,7 +68,7 @@ function TabBar({ state, navigateToTab, wide }: TabBarProps) {
         key={route.key}
         role="tab"
         aria-selected={focused}
-        accessibilityLabel={t(tab.label)}
+        accessibilityLabel={tab.name === 'feed' && unread ? t('tabs.feedUnread') : t(tab.label)}
         onPress={onPress}
         style={(s) => [
           wide ? styles.sideItem : styles.bottomItem,
@@ -73,7 +77,10 @@ function TabBar({ state, navigateToTab, wide }: TabBarProps) {
           (s as { focused?: boolean }).focused && { outlineColor: colors.focus, outlineWidth: 2, outlineStyle: 'solid' },
         ]}
       >
-        <Ionicons name={focused ? tab.iconActive : tab.icon} size={wide ? 22 : 24} color={focused ? colors.tide : colors.mist} />
+        <View>
+          <Ionicons name={focused ? tab.iconActive : tab.icon} size={wide ? 22 : 24} color={focused ? colors.tide : colors.mist} />
+          {tab.name === 'feed' && unread ? <View style={[styles.dot, { backgroundColor: colors.dawn, borderColor: colors.surface }]} /> : null}
+        </View>
         <Txt
           variant={wide ? 'label' : 'small'}
           style={{ color: focused ? colors.tide : colors.mist, fontFamily: focused ? FONTS.uiBold : FONTS.uiMedium }}
@@ -115,6 +122,7 @@ function TabBar({ state, navigateToTab, wide }: TabBarProps) {
 }
 
 const styles = StyleSheet.create({
+  dot: { position: 'absolute', top: -2, right: -4, width: 10, height: 10, borderRadius: 5, borderWidth: 2 },
   sidebar: { width: 240, paddingTop: SPACE.xl, paddingHorizontal: SPACE.md, borderRightWidth: 1, gap: SPACE.sm },
   sideItem: { flexDirection: 'row', alignItems: 'center', gap: SPACE.md, minHeight: 48, paddingHorizontal: SPACE.md, borderRadius: RADIUS.control },
   sideNote: { marginTop: 'auto', paddingBottom: SPACE.lg, paddingHorizontal: SPACE.sm },

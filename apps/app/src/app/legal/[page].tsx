@@ -7,7 +7,7 @@ import { Notice } from '../../ui/misc';
 import { Screen } from '../../ui/Screen';
 import { Txt } from '../../ui/Text';
 
-const PAGES = ['privacy', 'terms'] as const;
+const PAGES = ['privacy', 'terms', 'guidelines'] as const;
 type Page = (typeof PAGES)[number];
 
 /** Draft legal texts. They must be reviewed before the public launch (Phase 2). */
@@ -25,7 +25,7 @@ export default function LegalPage() {
         <Button label={t('common.back')} icon="chevron-back" variant="quiet" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
       </View>
       <Txt variant="h1">{t(`legal.${which}Title`)}</Txt>
-      <Notice tone="warning">{t('legal.draftNotice')}</Notice>
+      {which !== 'guidelines' ? <Notice tone="warning">{t('legal.draftNotice')}</Notice> : <Txt variant="lead">{t('legal.guidelinesIntro')}</Txt>}
       {sections.map((s) => (
         <View key={s.title} style={{ gap: SPACE.sm }}>
           <Txt variant="h3">{s.title}</Txt>

@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { getBook, isBookId, TRANSLATIONS, type BookId } from '@bible-app/bible';
+import { getBook, isBookId, toKey, TRANSLATIONS, type BookId } from '@bible-app/bible';
 import * as Clipboard from 'expo-clipboard';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
@@ -131,6 +131,15 @@ function Reader({ book, chapter, focusVerse }: { book: BookId; chapter: number; 
     setCopied(true);
   };
 
+  /** Share the selected verses (first to last) as a post. */
+  const share = () => {
+    const first = sorted[0];
+    const last = sorted[sorted.length - 1];
+    if (first === undefined || last === undefined) return;
+    const passage = toKey({ book, startChapter: chapter, startVerse: first, endChapter: chapter, endVerse: last });
+    router.push(`/feed/compose?type=verse&passage=${encodeURIComponent(passage)}`);
+  };
+
   const openNote = () => {
     const first = sorted[0];
     if (first === undefined) return;
@@ -173,6 +182,7 @@ function Reader({ book, chapter, focusVerse }: { book: BookId; chapter: number; 
             />
             <IconButton icon="create-outline" label={t('reader.addNote')} onPress={openNote} />
             <IconButton icon="copy-outline" label={t('reader.copy')} onPress={copy} />
+            <IconButton icon="share-social-outline" label={t('reader.share')} onPress={share} />
           </View>
         </View>
       </View>

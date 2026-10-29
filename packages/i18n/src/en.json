@@ -13,13 +13,17 @@
     "loading": "Loading",
     "tryAgain": "Try again",
     "decrease": "Decrease {{label}}",
-    "increase": "Increase {{label}}"
+    "increase": "Increase {{label}}",
+    "close": "Close",
+    "done": "Done"
   },
   "tabs": {
     "today": "Today",
     "read": "Read",
     "plans": "Plans",
-    "profile": "Profile"
+    "profile": "Profile",
+    "feed": "Friends",
+    "feedUnread": "Friends, new activity"
   },
   "demo": {
     "badge": "Demo mode: data stays in this browser.",
@@ -145,7 +149,8 @@
     "earnedFreeze": "You earned a streak freeze. It will cover a day you miss.",
     "newBadge": "New badge: {{name}}",
     "backToToday": "Back to Today",
-    "nextDayOf": "Day {{day}} of {{total}}"
+    "nextDayOf": "Day {{day}} of {{total}}",
+    "shareReflection": "Share a reflection"
   },
   "read": {
     "title": "Read",
@@ -186,7 +191,8 @@
     "markRead": "Mark chapter as read",
     "countedToday_one": "Counted for today. {{count}}-day streak.",
     "countedToday_other": "Counted for today. {{count}}-day streak.",
-    "chapterRecorded": "Chapter marked as read."
+    "chapterRecorded": "Chapter marked as read.",
+    "share": "Share as a post"
   },
   "reading": {
     "title": "Reading settings",
@@ -237,7 +243,9 @@
       "public": "Public",
       "friends": "Friends",
       "private": "Private"
-    }
+    },
+    "friends": "Friends and requests",
+    "asOthersSee": "See your profile as others do"
   },
   "badges": {
     "first_reading": {
@@ -304,7 +312,15 @@
     "deleteConfirmBody": "This permanently removes your profile, streak, plans, notes and highlights. It can’t be undone.",
     "deleteForever": "Delete permanently",
     "about": "About",
-    "freeForever": "Free, with no ads, and your data is never sold."
+    "freeForever": "Free, with no ads, and your data is never sold.",
+    "community": "Community",
+    "shareMilestones": "Share milestones with friends",
+    "shareMilestonesHint": "When you earn a badge or finish a plan, a short post appears for the people who follow you. You can hide each one.",
+    "blockedTitle": "Blocked people",
+    "blockedEmpty": "You haven't blocked anyone.",
+    "unblock": "Unblock",
+    "unblockLabel": "Unblock {{name}}",
+    "readGuidelines": "Read the community guidelines"
   },
   "reminders": {
     "title": "Reminders",
@@ -336,7 +352,11 @@
     "privacySections": [
       {
         "title": "What we store",
-        "body": "Your email address (for signing in), your profile, the days you read, your reading plans and progress, and your highlights, bookmarks and notes. Notes, highlights and reflections are private: only you can see them."
+        "body": "Your email address (for signing in), your profile, the days you read, your reading plans and progress, your highlights, bookmarks and notes, and what you post, react to and comment on. Notes, highlights and plan reflections are private: only you can see them, unless you choose to share a reflection as a post."
+      },
+      {
+        "title": "Who sees your posts",
+        "body": "Your profile setting decides it: public (anyone signed in), friends (people you accept), or private (only you). Blocking someone hides your profile and posts from them. When someone reports content, moderators can see the reported content."
       },
       {
         "title": "Where it is stored",
@@ -374,11 +394,39 @@
       },
       {
         "title": "Being kind",
-        "body": "When social features arrive, community guidelines will apply to everything you post. Content that breaks them can be removed."
+        "body": "The community guidelines apply to everything you post. Content that breaks them can be removed, and accounts that break them repeatedly can be suspended."
       },
       {
         "title": "Changes",
         "body": "If these terms change, we’ll tell you in the app before the change takes effect."
+      }
+    ],
+    "guidelinesTitle": "Community guidelines",
+    "guidelinesIntro": "DailyBread is a place to read the Bible together and encourage each other. These guidelines apply to everything you post.",
+    "guidelinesSections": [
+      {
+        "title": "Be kind",
+        "body": "Encourage, don't attack. Disagree with ideas respectfully and never with insults. Christians read the Bible in different traditions; welcome that."
+      },
+      {
+        "title": "Keep it about reading and prayer",
+        "body": "Share verses, reflections, prayer requests and milestones. No advertising, fundraising, spam or links."
+      },
+      {
+        "title": "Keep people safe",
+        "body": "No harassment, threats, hate, sexual content or content that endangers anyone. Many readers are teenagers: post only what is right for them to see."
+      },
+      {
+        "title": "Respect privacy",
+        "body": "Don't share other people's private information or prayer requests without their permission."
+      },
+      {
+        "title": "If something is wrong",
+        "body": "Use Report on any post, comment or profile. Reports are private. You can also mute or block anyone at any time."
+      },
+      {
+        "title": "What happens next",
+        "body": "Moderators review reports. Content that breaks these guidelines is removed, and accounts that break them repeatedly can be suspended."
       }
     ]
   },
@@ -410,7 +458,25 @@
     "plan_not_found": "That plan doesn’t exist.",
     "enrolment_not_found": "You haven’t started this plan.",
     "invalid_username": "Usernames use 3–24 lowercase letters, numbers or _.",
-    "username_taken": "That username is taken. Try another."
+    "username_taken": "That username is taken. Try another.",
+    "account_suspended": "Your account can't post right now because it has been suspended.",
+    "content_empty": "Write something first.",
+    "content_too_long": "That's a bit too long. Please shorten it.",
+    "links_not_allowed": "Links aren't allowed in posts and comments.",
+    "content_blocked": "Please rephrase: this contains words that aren't allowed here.",
+    "rate_limited": "You've posted a lot in a short time. Please try again later.",
+    "duplicate_post": "You've just posted this.",
+    "invalid_passage": "That passage wasn't found.",
+    "invalid_post": "This post is missing something. Please check it and try again.",
+    "post_not_found": "This post isn't available.",
+    "comment_not_found": "This comment isn't available.",
+    "profile_not_found": "This profile isn't available.",
+    "cannot_follow_private": "This profile is private.",
+    "cannot_follow_self": "You can't follow yourself.",
+    "cannot_block_self": "You can't block yourself.",
+    "report_target_not_found": "That's no longer available to report.",
+    "not_admin": "Only moderators can see this page.",
+    "invalid_action": "That action isn't possible here."
   },
   "books": {
     "GEN": "Genesis",
@@ -482,5 +548,209 @@
   },
   "bookSingular": {
     "PSA": "Psalm"
+  },
+  "feed": {
+    "title": "Friends",
+    "notifications": "Notifications",
+    "notificationsUnread_one": "Notifications, {{count}} new",
+    "notificationsUnread_other": "Notifications, {{count}} new",
+    "findPeople": "Find people",
+    "pendingRequests_one": "{{count}} person asked to follow you.",
+    "pendingRequests_other": "{{count}} people asked to follow you.",
+    "review": "Review",
+    "emptyTitle": "Reading is better together",
+    "emptyBody": "Follow friends to see what they're reading, pray for each other and cheer each other on.",
+    "caughtUpTitle": "You're all caught up",
+    "caughtUpBody": "That's everything from the last two weeks.",
+    "backToReading": "Back to today's reading",
+    "showOlder": "Show older posts",
+    "needUsername": "Choose a username so friends can find you and open your profile.",
+    "chooseUsername": "Choose one",
+    "newPost": "Write a post"
+  },
+  "compose": {
+    "title": "New post",
+    "heading": {
+      "verse": "Share verses",
+      "reflection": "Share a reflection",
+      "prayer": "Ask for prayer"
+    },
+    "kind": "Kind of post",
+    "passage": "Passage",
+    "passageHint": "For example: John 3:16 or Psalm 23",
+    "passageFound": "Found: {{place}}",
+    "needPassage": "Add the passage this reflection is about.",
+    "thoughtsOptional": "Your thoughts (optional)",
+    "prayerLabel": "What would you like prayer for?",
+    "reflectionLabel": "Your reflection",
+    "limit_one": "Up to {{count}} character.",
+    "limit_other": "Up to {{count}} characters.",
+    "audience": {
+      "public": "Anyone can see this post.",
+      "friends": "Only people you've accepted as followers can see this post.",
+      "private": "Your profile is private, so only you can see this post."
+    },
+    "guidelines": "Community guidelines",
+    "post": "Post"
+  },
+  "post": {
+    "title": "Post",
+    "label": "{{type}} by {{name}}",
+    "types": {
+      "verse": "Verses",
+      "reflection": "Reflection",
+      "prayer": "Prayer request",
+      "milestone": "Milestone"
+    },
+    "reactions": {
+      "amen": "Amen",
+      "praying": "Praying",
+      "encouraged": "Encouraged"
+    },
+    "reactionLabel_one": "{{reaction}}, {{count}}",
+    "reactionLabel_other": "{{reaction}}, {{count}}",
+    "commentsLabel_one": "{{count}} comment",
+    "commentsLabel_other": "{{count}} comments",
+    "comment": "Comment",
+    "commentsTitle_one": "{{count}} comment",
+    "commentsTitle_other": "{{count}} comments",
+    "noComments": "No comments yet.",
+    "addComment": "Add a comment",
+    "sendComment": "Send",
+    "commentActions": "Comment by {{name}}",
+    "deleteComment": "Delete comment",
+    "reportComment": "Report comment",
+    "milestonePlan": "Finished the plan “{{title}}”",
+    "milestoneBadge": "Earned the badge “{{badge}}”",
+    "readPassage": "Read the passage",
+    "open": "Open post",
+    "openProfile": "Open {{name}}'s profile",
+    "more": "More options",
+    "hide": "Hide from others",
+    "show": "Show to others",
+    "hiddenNote": "Hidden. Only you can see this.",
+    "delete": "Delete post",
+    "deleteConfirm": "Delete this post? Comments and reactions on it will be deleted too.",
+    "report": "Report post",
+    "mute": "Mute {{name}}",
+    "block": "Block {{name}}"
+  },
+  "report": {
+    "title_post": "Report post",
+    "title_comment": "Report comment",
+    "title_user": "Report person",
+    "intro": "Reports are private. The person won't know who reported them.",
+    "reason": "What's wrong?",
+    "reasons": {
+      "spam": "Spam or advertising",
+      "harassment": "Bullying or harassment",
+      "inappropriate": "Inappropriate content",
+      "false_info": "Misleading information",
+      "other": "Something else"
+    },
+    "details": "Details (optional)",
+    "detailsHint": "Anything that helps us understand.",
+    "send": "Send report",
+    "thanksTitle": "Thank you",
+    "thanksBody": "We'll look at this soon.",
+    "alsoBlock": "Also block {{name}}"
+  },
+  "people": {
+    "title": "People",
+    "show": "Show",
+    "tabs": {
+      "find": "Find",
+      "following": "Following",
+      "followers": "Followers",
+      "requests": "Requests"
+    },
+    "searchLabel": "Search by name or username",
+    "searchHint": "Private profiles don't appear in search.",
+    "noResults": "No one found.",
+    "empty": {
+      "following": "You're not following anyone yet.",
+      "followers": "No followers yet.",
+      "requests": "No requests right now."
+    },
+    "follow": "Follow",
+    "followLabel": "Follow {{name}}",
+    "request": "Ask to follow",
+    "requestLabel": "Ask to follow {{name}}",
+    "requested": "Requested",
+    "cancelRequestLabel": "Cancel your request to follow {{name}}",
+    "following": "Following",
+    "unfollowLabel": "Following {{name}}. Unfollow",
+    "accept": "Accept",
+    "acceptLabel": "Accept {{name}}",
+    "decline": "Decline",
+    "declineLabel": "Decline {{name}}",
+    "remove": "Remove",
+    "removeLabel": "Remove {{name}} from your followers",
+    "moreFor": "More options for {{name}}",
+    "unmute": "Unmute {{name}}",
+    "mutedNote": "You've muted {{name}}. Their posts won't appear in your feed.",
+    "reportUser": "Report {{name}}",
+    "blockConfirm": "Block {{name}}? You won't see each other's posts or profiles, and any follows between you are removed.",
+    "editProfile": "Edit profile",
+    "followsYou": "Follows you",
+    "privateNote": "This profile is private.",
+    "friendsOnlyNote": "Only people {{name}} has accepted can see this profile.",
+    "currentStreak": "Current streak",
+    "longestStreak": "Longest streak",
+    "badges": "Badges",
+    "readingNow": "Reading now",
+    "posts": "Posts",
+    "noPosts": "No posts yet.",
+    "endOfPosts": "That's all.",
+    "followerCount_one": "{{count}} follower",
+    "followerCount_other": "{{count}} followers",
+    "followingCount": "{{count}} following"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "Nothing new. When friends react, comment or follow you, it shows up here.",
+    "end": "That's all your recent activity.",
+    "new": "New",
+    "kinds": {
+      "comment": "{{name}} commented on your post",
+      "reaction": "{{name}} reacted to your post",
+      "follow": "{{name}} started following you",
+      "follow_request": "{{name}} asked to follow you",
+      "follow_accepted": "{{name}} accepted your request"
+    }
+  },
+  "moderation": {
+    "title": "Moderation",
+    "show": "Show",
+    "status": {
+      "open": "Open",
+      "actioned": "Actioned",
+      "dismissed": "Dismissed"
+    },
+    "empty": {
+      "open": "No open reports.",
+      "actioned": "Nothing here yet.",
+      "dismissed": "Nothing here yet."
+    },
+    "target": {
+      "post": "Post",
+      "comment": "Comment",
+      "user": "Person"
+    },
+    "reportCount_one": "{{count}} report",
+    "reportCount_other": "{{count}} reports",
+    "details": "What reporters said:",
+    "alreadyRemoved": "This content has already been removed.",
+    "suspendedUntil": "Suspended until {{date}}",
+    "note": "Note (optional)",
+    "noteHint": "Kept in the moderation log, not shown to the person.",
+    "actions": {
+      "dismiss": "Dismiss",
+      "remove": "Remove content",
+      "suspend_7d": "Suspend 7 days",
+      "suspend_30d": "Suspend 30 days",
+      "suspend_indefinitely": "Suspend indefinitely"
+    },
+    "liftSuspension": "Lift suspension"
   }
 }
