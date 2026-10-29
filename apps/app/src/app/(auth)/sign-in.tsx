@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { useBackend } from '../../api/BackendProvider';
+import { config } from '../../config';
 import { SPACE } from '../../theme/tokens';
 import { Button } from '../../ui/Button';
 import { Logo } from '../../ui/Logo';
@@ -82,7 +83,7 @@ export default function SignIn() {
           </Txt>
         ) : null}
         <Button label={t('auth.signIn')} onPress={signIn} loading={busy === 'password'} fullWidth />
-        {!demo ? (
+        {!demo && config.googleSignIn ? (
           <Button label={t('auth.continueWithGoogle')} icon="logo-google" variant="secondary" onPress={google} loading={busy === 'google'} fullWidth />
         ) : null}
       </View>

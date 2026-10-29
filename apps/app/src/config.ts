@@ -8,6 +8,8 @@ const env = {
   /** Where /bible and /demo files are served. Empty = same origin as the web app. */
   assetBaseUrl: (process.env.EXPO_PUBLIC_ASSET_BASE_URL ?? '').replace(/\/$/, ''),
   vapidPublicKey: process.env.EXPO_PUBLIC_VAPID_PUBLIC_KEY ?? '',
+  /** Show "Continue with Google" only once the Google provider is set up in Supabase. */
+  googleSignIn: process.env.EXPO_PUBLIC_ENABLE_GOOGLE === 'true',
 };
 
 export const config = {

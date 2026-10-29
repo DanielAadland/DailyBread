@@ -41,7 +41,15 @@ Schema, row-level security, functions, seed data and Edge Functions.
      );
    $$);
    ```
-   The streak job (`settle-streaks`) is scheduled by the migrations.
+   The streak job (`settle-streaks`) is scheduled by the migrations. Finally add the public key as a GitHub
+   repository **variable** `VAPID_PUBLIC_KEY`; the deploy workflow then builds it into the website and
+   redeploys the function on every push.
+6. Google sign-in (optional): in Google Cloud Console create an OAuth client (Web application) with the
+   redirect URI `https://<project-ref>.supabase.co/auth/v1/callback`, paste its ID and secret into
+   Supabase → Authentication → Providers → Google, then add the GitHub repository variable
+   `ENABLE_GOOGLE_SIGN_IN` = `true` to show the button.
+
+Steps 2 and 3 run automatically in CI (`supabase/scripts/deploy-db.sh`) once the repository secrets are set.
 
 ## Run the database tests locally
 

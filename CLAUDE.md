@@ -25,6 +25,31 @@ packages/i18n   Translation files (en.json) and i18next setup.
 supabase/       SQL migrations (schema, RLS, functions), seed data, Edge Functions, DB tests.
 ```
 
+### App architecture (apps/app/src)
+
+```
+app/            Routes (Expo Router). (auth) sign-in/up, onboarding, (tabs) today/read/plans/profile, legal.
+api/            Backend interface (types.ts) with two implementations:
+                  supabase-backend.ts  production (Supabase Auth, tables with RLS, RPC functions)
+                  demo-backend.ts      no server: data in AsyncStorage, rules from @bible-app/core
+                hooks.ts (React Query), access.ts (which area a visitor belongs in), BackendProvider.tsx
+bible/          StaticBibleProvider setup, chapter/passage hooks, book names, last-read position
+theme/          Design tokens ("first light" palette, Literata + Figtree, spacing) and ThemeProvider
+ui/             Txt, Button, Screen, TextField, DawnArc, VerseList, settings panels, small parts in misc.tsx
+lib/            Web Push subscription, time helpers
+```
+
+- Demo mode is on whenever `EXPO_PUBLIC_SUPABASE_URL`/`_ANON_KEY` are missing. Keep both backends in step:
+  a new feature adds a method to `Backend` and implements it in both.
+- Access control in the UI: each area's layout redirects with `useAccess()` (signed out → `/sign-in`,
+  new user → `/onboarding`). Don't use `Stack.Protected`: its automatic redirect lands on `/(auth)`, which
+  has no page.
+- Navigation: use `Button href=…` or `router.push`. Don't wrap a Pressable in `<Link asChild>`: on web the
+  Pressable's style function is lost (layout breaks).
+- `npx expo install` can't reach Expo's servers from the build workspace; take versions from
+  `node_modules/expo/bundledNativeModules.json` and `pnpm add` them.
+- Visual check: `pnpm --filter app build:web`, serve `apps/app/dist`, screenshot with headless Chromium.
+
 ## Conventions
 
 - TypeScript strict everywhere, including `noUncheckedIndexedAccess`.
@@ -51,6 +76,10 @@ supabase/       SQL migrations (schema, RLS, functions), seed data, Edge Functio
 | 2026-10-29 | Sign-in: email + Google in v1, Apple in Phase 6 | Apple sign-in needs the paid Apple Developer account. |
 | 2026-10-29 | Streak freezes: start with 1, earn 1 every 7 streak days, max 2; a freeze keeps the streak but does not add to it | Forgiving without being gameable. |
 | 2026-10-29 | Plan days can be completed in any order; no "behind schedule" messages | Catching up should feel good, not guilty. |
+| 2026-10-29 | Demo backend alongside Supabase | The app is usable and testable before (and without) a server; exercises the core rules in the client. |
+| 2026-10-29 | Reminder times on 15-minute steps; quoted search phrases also matched literally | One job run per reminder; Postgres full-text search drops small words. |
+| 2026-10-29 | Deploy through GitHub Actions (Supabase CLI + Cloudflare Pages) | The build workspace can't reach Supabase or Cloudflare; secrets stay in GitHub. |
+| 2026-10-29 | Web output "single" (SPA) for now | Simplest with client-side auth; static rendering can come later for faster first load. |
 
 ## Environment
 

@@ -1,0 +1,12 @@
+# Supabase CLI project settings. Only what this project uses; everything else keeps the CLI defaults.
+project_id = "dailybread"
+
+[api]
+schemas = ["public"]
+
+[db]
+major_version = 17
+
+[auth]
+site_url = "http://localhost:8081"
+additional_redirect_urls = ["http://localhost:8081/reset-password"]
