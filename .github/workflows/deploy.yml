@@ -65,7 +65,25 @@ jobs:
             echo "Add the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID secrets." >&2
             exit 1
           fi
+      # Wrangler's own messages are turned into annotations, so failures are readable from the run summary.
       - name: Create the Pages project (first deploy only)
-        run: npx --yes wrangler@4 pages project create "$CLOUDFLARE_PROJECT" --production-branch main || true
+        env:
+          NO_COLOR: '1'
+        run: |
+          set +e
+          npx --yes wrangler@4 pages project create "$CLOUDFLARE_PROJECT" --production-branch main > create.log 2>&1
+          if [ $? -ne 0 ] && ! grep -qi "already exists" create.log; then
+            echo "::warning title=Pages project create::$(tail -n 15 create.log | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+          fi
+          exit 0
       - name: Publish to Cloudflare Pages
-        run: npx --yes wrangler@4 pages deploy apps/app/dist --project-name "$CLOUDFLARE_PROJECT" --branch main --commit-dirty=true
+        env:
+          NO_COLOR: '1'
+        run: |
+          set +e
+          npx --yes wrangler@4 pages deploy apps/app/dist --project-name "$CLOUDFLARE_PROJECT" --branch main --commit-dirty=true 2>&1 | tee deploy.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            echo "::error title=Cloudflare Pages deploy failed::$(tail -n 25 deploy.log | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+          fi
+          exit "$status"
