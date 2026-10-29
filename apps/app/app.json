@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "Daybread",
+    "slug": "daybread",
+    "scheme": "daybread",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#F5F7F9",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "single",
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png",
+      "name": "Daybread",
+      "shortName": "Daybread",
+      "themeColor": "#2E5E8C",
+      "backgroundColor": "#F5F7F9",
+      "lang": "en"
+    },
+    "plugins": ["expo-router", "expo-font", "expo-localization"]
+  }
+}
