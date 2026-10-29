@@ -75,6 +75,18 @@ jobs:
             echo "::error title=CLOUDFLARE_ACCOUNT_ID looks wrong::It should be 32 characters, 0-9 and a-f (Cloudflare dashboard → Account home → Account ID). The secret has ${#id} characters; other symbols in it: '${others}'."
             exit 1
           fi
+          # An API token is a single word of letters, digits, '-' and '_' (about 40 characters).
+          # Not the Global API Key, not the token's name, no "Bearer " in front.
+          token=$(printf '%s' "$CLOUDFLARE_API_TOKEN" | tr -d '[:space:]')
+          if printf '%s' "$CLOUDFLARE_API_TOKEN" | grep -qi '^[[:space:]]*bearer'; then
+            echo "::error title=CLOUDFLARE_API_TOKEN looks wrong::Remove the word 'Bearer' from the start of the secret; paste only the token itself."
+            exit 1
+          fi
+          if ! printf '%s' "$token" | grep -Eq '^[A-Za-z0-9_-]{30,}$'; then
+            others=$(printf '%s' "$token" | tr -d 'a-zA-Z0-9_-' | fold -w1 | sort -u | tr -d '\n')
+            echo "::error title=CLOUDFLARE_API_TOKEN looks wrong::A Cloudflare API token is one word of letters, digits, '-' and '_' (usually 40 characters), shown once when you create it under My Profile → API Tokens → Create Token (template 'Edit Cloudflare Workers', or a custom token with Account → Cloudflare Pages → Edit). The secret has ${#token} characters; other symbols in it: '${others}'."
+            exit 1
+          fi
       # Wrangler's own messages are turned into annotations, so failures are readable from the run summary.
       - name: Create the Pages project (first deploy only)
         env:
