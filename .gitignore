@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.expo/
+.turbo/
+*.log
+.env
+.env.*
+!.env.example
+apps/app/public/bible/
+supabase/seed/generated/
+.DS_Store
+packages/bible/data/source/

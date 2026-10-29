@@ -1,0 +1,21 @@
+{
+  "name": "bible-app",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "scripts": {
+    "dev": "pnpm --filter app web",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "bible:import": "pnpm --filter @bible-app/bible build-text",
+    "db:test": "pnpm --filter @bible-app/db test"
+  },
+  "devDependencies": {
+    "turbo": "^2.11.10"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}
