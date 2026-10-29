@@ -1,0 +1,19 @@
+{
+  "name": "@bible-app/bible",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "download": "sh scripts/download.sh",
+    "build-text": "sh scripts/download.sh && tsx scripts/import.ts",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.5"
+  }
+}
