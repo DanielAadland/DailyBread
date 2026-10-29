@@ -1,8 +1,8 @@
-import type { BadgeCode, LocalDate } from '@bible-app/core';
+import type { BadgeCode, LocalDate, Visibility as CoreVisibility } from '@bible-app/core';
 import type { BookId, SearchHit, TranslationId } from '@bible-app/bible';
 import type { ReadingPrefs } from '../theme/tokens';
 
-export type Visibility = 'public' | 'friends' | 'private';
+export type Visibility = CoreVisibility;
 export type HighlightColor = 'yellow' | 'green' | 'blue' | 'pink' | 'purple';
 export const HIGHLIGHT_COLORS: HighlightColor[] = ['yellow', 'green', 'blue', 'pink', 'purple'];
 
@@ -22,10 +22,12 @@ export interface Profile {
   translation: TranslationId;
   readingPrefs: Partial<ReadingPrefs>;
   onboarded: boolean;
+  shareMilestones: boolean;
+  isAdmin: boolean;
 }
 
 export type ProfilePatch = Partial<
-  Pick<Profile, 'username' | 'displayName' | 'bio' | 'visibility' | 'timezone' | 'translation' | 'readingPrefs' | 'onboarded'>
+  Pick<Profile, 'username' | 'displayName' | 'bio' | 'visibility' | 'timezone' | 'translation' | 'readingPrefs' | 'onboarded' | 'shareMilestones'>
 >;
 
 export interface NotificationPrefs {
@@ -138,6 +140,112 @@ export interface EarnedBadge {
   earnedAt: string;
 }
 
+// Social ---------------------------------------------------------------------------------
+
+export type PostType = 'verse' | 'reflection' | 'prayer' | 'milestone';
+export type ReactionKind = 'amen' | 'praying' | 'encouraged';
+export const REACTION_KINDS: ReactionKind[] = ['amen', 'praying', 'encouraged'];
+export type FollowState = 'none' | 'pending' | 'accepted';
+
+export interface Person {
+  id: string;
+  username: string | null;
+  displayName: string;
+  avatarUrl: string | null;
+}
+
+export type Milestone =
+  | { kind: 'badge'; code: BadgeCode }
+  | { kind: 'plan'; slug: string; title: string; days: number };
+
+export interface Post {
+  id: string;
+  type: PostType;
+  passage: string | null;
+  translation: TranslationId | null;
+  verseText: string | null;
+  body: string;
+  milestone: Milestone | null;
+  hidden: boolean;
+  createdAt: string;
+  isMine: boolean;
+  author: Person;
+  reactions: Record<ReactionKind, number>;
+  myReaction: ReactionKind | null;
+  commentCount: number;
+}
+
+export interface NewPost {
+  type: 'verse' | 'reflection' | 'prayer';
+  body: string;
+  passage?: string;
+  translation?: TranslationId;
+  verseText?: string;
+}
+
+export interface FeedPage {
+  items: Post[];
+  /** True when there is nothing older to load: the feed has ended. */
+  caughtUp: boolean;
+}
+
+export interface Comment {
+  id: string;
+  body: string;
+  createdAt: string;
+  isMine: boolean;
+  canRemove: boolean;
+  author: Person;
+}
+
+export interface PersonResult extends Person {
+  visibility: Visibility;
+  followStatus: FollowState;
+}
+
+export interface PublicProfile extends Person {
+  visibility: Visibility;
+  isMe: boolean;
+  canSee: boolean;
+  followStatus: FollowState;
+  followsYou: boolean;
+  muted: boolean;
+  followerCount: number;
+  followingCount: number;
+  bio?: string;
+  streak?: { current: number; longest: number };
+  badges?: BadgeCode[];
+  plans?: Array<{ title: string; days: number; completed: number }>;
+}
+
+export type NotificationKind = 'comment' | 'reaction' | 'follow' | 'follow_request' | 'follow_accepted';
+
+export interface AppNotification {
+  id: string;
+  kind: NotificationKind;
+  createdAt: string;
+  read: boolean;
+  actor: Person;
+  post: { id: string; type: PostType; passage: string | null; body: string } | null;
+}
+
+export type ReportTarget = 'post' | 'comment' | 'user';
+export type ReportReason = 'spam' | 'harassment' | 'inappropriate' | 'false_info' | 'other';
+export const REPORT_REASONS: ReportReason[] = ['spam', 'harassment', 'inappropriate', 'false_info', 'other'];
+export type ModerationAction = 'dismiss' | 'remove' | 'suspend_7d' | 'suspend_30d' | 'suspend_indefinitely';
+
+export interface ModerationItem {
+  targetType: ReportTarget;
+  targetId: string;
+  reportCount: number;
+  reasons: ReportReason[];
+  details: string[];
+  firstReportedAt: string;
+  preview: { body: string | null; verseText?: string | null; removed?: boolean; suspendedUntil?: string | null; author: Person | null };
+}
+
+export type RealtimeTopic = { kind: 'post'; postId: string } | { kind: 'notifications' };
+
 export interface PushSubscriptionInput {
   endpoint: string;
   p256dh: string;
@@ -191,6 +299,40 @@ export interface Backend {
 
   exportData(): Promise<unknown>;
   deleteAccount(): Promise<void>;
+
+  // Social
+  getFeed(before?: string): Promise<FeedPage>;
+  getUserPosts(userId: string, before?: string): Promise<FeedPage>;
+  getPost(id: string): Promise<Post>;
+  createPost(input: NewPost): Promise<Post>;
+  deletePost(id: string): Promise<void>;
+  setPostHidden(id: string, hidden: boolean): Promise<void>;
+  react(postId: string, kind: ReactionKind | null): Promise<Post>;
+  listComments(postId: string): Promise<Comment[]>;
+  addComment(postId: string, body: string): Promise<Comment>;
+  deleteComment(id: string): Promise<void>;
+
+  findPeople(query: string): Promise<PersonResult[]>;
+  getPublicProfile(ref: { id?: string; username?: string }): Promise<PublicProfile>;
+  follow(userId: string): Promise<FollowState>;
+  unfollow(userId: string): Promise<void>;
+  respondToFollow(userId: string, accept: boolean): Promise<void>;
+  removeFollower(userId: string): Promise<void>;
+  listConnections(kind: 'followers' | 'following' | 'requests'): Promise<Person[]>;
+  block(userId: string): Promise<void>;
+  unblock(userId: string): Promise<void>;
+  listBlocked(): Promise<Person[]>;
+  setMuted(userId: string, muted: boolean): Promise<void>;
+  report(target: ReportTarget, targetId: string, reason: ReportReason, details: string): Promise<void>;
+
+  listNotifications(): Promise<AppNotification[]>;
+  markNotificationsRead(): Promise<void>;
+  /** Live updates (new comments, reactions, notifications). Returns a function that stops them. */
+  subscribe(topic: RealtimeTopic, onChange: () => void): () => void;
+
+  adminReports(status: 'open' | 'actioned' | 'dismissed'): Promise<ModerationItem[]>;
+  adminResolve(target: ReportTarget, targetId: string, action: ModerationAction, note?: string): Promise<void>;
+  adminUnsuspend(userId: string): Promise<void>;
 }
 
 /** Errors the UI knows how to explain; `code` maps to `errors.<code>` in the translation files. */

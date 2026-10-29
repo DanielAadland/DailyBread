@@ -1,7 +1,21 @@
-import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type InfiniteData, type QueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import type { BookId, TranslationId } from '@bible-app/bible';
 import { useBackend } from './BackendProvider';
-import type { Backend, HighlightColor, NotificationPrefs, ProfilePatch } from './types';
+import type {
+  Backend,
+  FeedPage,
+  HighlightColor,
+  ModerationAction,
+  NewPost,
+  NotificationPrefs,
+  Post,
+  ProfilePatch,
+  ReactionKind,
+  RealtimeTopic,
+  ReportReason,
+  ReportTarget,
+} from './types';
 
 /** Query keys in one place so mutations invalidate exactly what changed. */
 export const keys = {
@@ -15,6 +29,16 @@ export const keys = {
   annotations: (book: string, chapter: number) => ['annotations', book, chapter] as const,
   saved: ['saved'] as const,
   search: (translation: string, query: string) => ['search', translation, query] as const,
+  feed: ['feed'] as const,
+  userPosts: (userId: string) => ['user-posts', userId] as const,
+  post: (id: string) => ['post', id] as const,
+  comments: (postId: string) => ['comments', postId] as const,
+  people: (query: string) => ['people', query] as const,
+  publicProfile: (ref: string) => ['public-profile', ref] as const,
+  connections: (kind: string) => ['connections', kind] as const,
+  blocked: ['blocked'] as const,
+  notifications: ['notifications'] as const,
+  adminReports: (status: string) => ['admin-reports', status] as const,
 };
 
 const afterReading = (qc: QueryClient) =>
@@ -177,5 +201,213 @@ export function useSearch(translation: TranslationId, query: string) {
     queryFn: () => search!(translation, query),
     enabled: !!search && query.trim().length >= 2,
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+
+// Social ------------------------------------------------------------------------------------
+
+const nextBefore = (last: FeedPage) => (last.caughtUp ? undefined : last.items[last.items.length - 1]?.createdAt);
+
+/** The feed in pages of 20. It ends after 14 days ("You're all caught up"). */
+export function useFeed() {
+  const { backend, session } = useBackend();
+  return useInfiniteQuery({
+    queryKey: keys.feed,
+    queryFn: ({ pageParam }) => backend.getFeed(pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: nextBefore,
+    enabled: !!session,
+  });
+}
+
+export function useUserPosts(userId: string | undefined) {
+  const { backend, session } = useBackend();
+  return useInfiniteQuery({
+    queryKey: keys.userPosts(userId ?? ''),
+    queryFn: ({ pageParam }) => backend.getUserPosts(userId!, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: nextBefore,
+    enabled: !!session && !!userId,
+  });
+}
+
+export function usePost(id: string) {
+  const { backend, session } = useBackend();
+  return useQuery({ queryKey: keys.post(id), queryFn: () => backend.getPost(id), enabled: !!session });
+}
+
+export function useComments(postId: string) {
+  const { backend, session } = useBackend();
+  return useQuery({ queryKey: keys.comments(postId), queryFn: () => backend.listComments(postId), enabled: !!session });
+}
+
+/** Refetch the given queries whenever the server reports a change on the topic. */
+export function useRealtime(topic: RealtimeTopic | null, queryKeys: ReadonlyArray<readonly unknown[]>) {
+  const { backend } = useBackend();
+  const qc = useQueryClient();
+  const id = topic ? (topic.kind === 'post' ? `post:${topic.postId}` : 'notifications') : null;
+  useEffect(() => {
+    if (!topic) return;
+    return backend.subscribe(topic, () => {
+      for (const key of queryKeys) qc.invalidateQueries({ queryKey: key });
+    });
+    // The topic id captures everything that matters about `topic` and `queryKeys`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [backend, qc, id]);
+}
+
+/** Put an updated post into every cache that shows it. */
+function replacePost(qc: QueryClient, post: Post) {
+  qc.setQueryData(keys.post(post.id), post);
+  const update = (data: InfiniteData<FeedPage> | undefined) =>
+    data && { ...data, pages: data.pages.map((p) => ({ ...p, items: p.items.map((i) => (i.id === post.id ? post : i)) })) };
+  qc.setQueriesData<InfiniteData<FeedPage>>({ queryKey: keys.feed }, update);
+  qc.setQueriesData<InfiniteData<FeedPage>>({ queryKey: ['user-posts'] }, update);
+}
+
+const afterPostsChanged = (qc: QueryClient) =>
+  Promise.all([qc.invalidateQueries({ queryKey: keys.feed }), qc.invalidateQueries({ queryKey: ['user-posts'] })]);
+
+export function useCreatePost() {
+  const { backend } = useBackend();
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: (input: NewPost) => backend.createPost(input), onSuccess: () => afterPostsChanged(qc) });
+}
+
+export function useDeletePost() {
+  const { backend } = useBackend();
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: (id: string) => backend.deletePost(id), onSuccess: () => afterPostsChanged(qc) });
+}
+
+export function useSetPostHidden() {
+  const { backend } = useBackend();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { id: string; hidden: boolean }) => backend.setPostHidden(v.id, v.hidden),
+    onSuccess: () => afterPostsChanged(qc),
+  });
+}
+
+export function useReact() {
+  const { backend } = useBackend();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { postId: string; kind: ReactionKind | null }) => backend.react(v.postId, v.kind),
+    onSuccess: (post) => replacePost(qc, post),
+  });
+}
+
+export function useAddComment(postId: string) {
+  const { backend } = useBackend();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: string) => backend.addComment(postId, body),
+    onSuccess: () =>
+      Promise.all([qc.invalidateQueries({ queryKey: keys.comments(postId) }), qc.invalidateQueries({ queryKey: keys.post(postId) }), afterPostsChanged(qc)]),
+  });
+}
+
+export function useDeleteComment(postId: string) {
+  const { backend } = useBackend();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => backend.deleteComment(id),
+    onSuccess: () =>
+      Promise.all([qc.invalidateQueries({ queryKey: keys.comments(postId) }), qc.invalidateQueries({ queryKey: keys.post(postId) }), afterPostsChanged(qc)]),
+  });
+}
+
+export function useFindPeople(query: string) {
+  const { backend, session } = useBackend();
+  const q = query.trim();
+  return useQuery({ queryKey: keys.people(q), queryFn: () => backend.findPeople(q), enabled: !!session && q.length >= 2 });
+}
+
+export function usePublicProfile(ref: { id?: string; username?: string }) {
+  const { backend, session } = useBackend();
+  const key = ref.id ?? `@${ref.username ?? ''}`;
+  return useQuery({
+    queryKey: keys.publicProfile(key),
+    queryFn: () => backend.getPublicProfile(ref),
+    enabled: !!session && !!(ref.id || ref.username),
+  });
+}
+
+const afterRelationshipChanged = (qc: QueryClient) =>
+  Promise.all(
+    [['public-profile'], ['people'], ['connections'], keys.blocked, keys.feed, ['user-posts'], keys.notifications].map((queryKey) =>
+      qc.invalidateQueries({ queryKey }),
+    ),
+  );
+
+function useRelationshipMutation<V>(fn: (backend: Backend, v: V) => Promise<unknown>) {
+  const { backend } = useBackend();
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: (v: V) => fn(backend, v), onSuccess: () => afterRelationshipChanged(qc) });
+}
+
+export const useFollow = () => useRelationshipMutation<string>((b, id) => b.follow(id));
+export const useUnfollow = () => useRelationshipMutation<string>((b, id) => b.unfollow(id));
+export const useRespondToFollow = () =>
+  useRelationshipMutation<{ userId: string; accept: boolean }>((b, v) => b.respondToFollow(v.userId, v.accept));
+export const useRemoveFollower = () => useRelationshipMutation<string>((b, id) => b.removeFollower(id));
+export const useBlock = () => useRelationshipMutation<string>((b, id) => b.block(id));
+export const useUnblock = () => useRelationshipMutation<string>((b, id) => b.unblock(id));
+export const useSetMuted = () => useRelationshipMutation<{ userId: string; muted: boolean }>((b, v) => b.setMuted(v.userId, v.muted));
+
+export function useConnections(kind: 'followers' | 'following' | 'requests') {
+  const { backend, session } = useBackend();
+  return useQuery({ queryKey: keys.connections(kind), queryFn: () => backend.listConnections(kind), enabled: !!session });
+}
+
+export function useBlocked() {
+  const { backend, session } = useBackend();
+  return useQuery({ queryKey: keys.blocked, queryFn: () => backend.listBlocked(), enabled: !!session });
+}
+
+export function useReport() {
+  const { backend } = useBackend();
+  return useMutation({
+    mutationFn: (v: { target: ReportTarget; targetId: string; reason: ReportReason; details: string }) =>
+      backend.report(v.target, v.targetId, v.reason, v.details),
+  });
+}
+
+export function useNotifications() {
+  const { backend, session } = useBackend();
+  const query = useQuery({ queryKey: keys.notifications, queryFn: () => backend.listNotifications(), enabled: !!session });
+  useRealtime(session ? { kind: 'notifications' } : null, [keys.notifications]);
+  return query;
+}
+
+export function useMarkNotificationsRead() {
+  const { backend } = useBackend();
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: () => backend.markNotificationsRead(), onSuccess: () => qc.invalidateQueries({ queryKey: keys.notifications }) });
+}
+
+export function useAdminReports(status: 'open' | 'actioned' | 'dismissed') {
+  const { backend, session } = useBackend();
+  return useQuery({ queryKey: keys.adminReports(status), queryFn: () => backend.adminReports(status), enabled: !!session });
+}
+
+export function useAdminResolve() {
+  const { backend } = useBackend();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { target: ReportTarget; targetId: string; action: ModerationAction; note?: string }) =>
+      backend.adminResolve(v.target, v.targetId, v.action, v.note),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-reports'] }),
+  });
+}
+
+export function useAdminUnsuspend() {
+  const { backend } = useBackend();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => backend.adminUnsuspend(userId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-reports'] }),
   });
 }

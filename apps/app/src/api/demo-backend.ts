@@ -17,6 +17,7 @@ import {
   type StreakState,
 } from '@bible-app/core';
 import { BOOKS, fromKey, isValidRange, type BookId } from '@bible-app/bible';
+import { createDemoSocial, seedSocial, type SocialState } from './demo-social';
 import {
   AppError,
   type Backend,
@@ -25,6 +26,7 @@ import {
   type DayState,
   type Enrolment,
   type HighlightColor,
+  type Milestone,
   type Note,
   type NotificationPrefs,
   type PlanDetail,
@@ -55,6 +57,7 @@ interface DemoState {
   notes: Note[];
   chapterReads: string[];
   badges: Array<{ code: BadgeCode; earnedAt: string }>;
+  social: SocialState | null;
 }
 
 const DEFAULT_PREFS: NotificationPrefs = {
@@ -82,6 +85,7 @@ function emptyState(): DemoState {
     notes: [],
     chapterReads: [],
     badges: [],
+    social: null,
   };
 }
 
@@ -100,6 +104,12 @@ export function createDemoBackend(assetBaseUrl: string): Backend {
     try {
       const raw = await AsyncStorage.getItem(KEY);
       state = raw ? { ...emptyState(), ...(JSON.parse(raw) as DemoState) } : emptyState();
+      // Older demo data: add fields introduced later.
+      if (state.profile) {
+        const saved: Partial<Profile> = state.profile;
+        state.profile = { ...state.profile, shareMilestones: saved.shareMilestones ?? true, isAdmin: saved.isAdmin ?? false };
+        state.social ??= seedSocial(state.profile.id);
+      }
     } catch {
       state = emptyState();
     }
@@ -153,7 +163,10 @@ export function createDemoBackend(assetBaseUrl: string): Backend {
       s.badges.map((b) => b.code),
     );
     const now = new Date().toISOString();
-    for (const code of earned) s.badges.push({ code, earnedAt: now });
+    for (const code of earned) {
+      s.badges.push({ code, earnedAt: now });
+      addMilestone(s, { kind: 'badge', code });
+    }
     return earned;
   }
 
@@ -201,13 +214,45 @@ export function createDemoBackend(assetBaseUrl: string): Backend {
       translation: 'bsb',
       readingPrefs: {},
       onboarded: false,
+      shareMilestones: true,
+      isAdmin: false,
     };
+    s.social = seedSocial(id);
     await save();
     emit(s.session);
   }
 
+  /** Share a badge or finished plan with followers, unless the user switched that off. */
+  function addMilestone(s: DemoState, milestone: Milestone): void {
+    if (!s.profile?.shareMilestones || !s.social) return;
+    if (milestone.kind === 'badge' && milestone.code === 'first_reading') return;
+    s.social.posts.push({
+      id: newId(),
+      authorId: s.profile.id,
+      type: 'milestone',
+      passage: null,
+      translation: null,
+      verseText: null,
+      body: '',
+      milestone,
+      hidden: false,
+      createdAt: new Date().toISOString(),
+    });
+  }
+
+  const social = createDemoSocial({
+    async current() {
+      const s = await signedIn();
+      s.social ??= seedSocial(s.profile.id);
+      return { me: s.profile, social: s.social };
+    },
+    save,
+    newId,
+  });
+
   return {
     kind: 'demo',
+    ...social,
 
     auth: {
       async getSession() {
@@ -391,6 +436,7 @@ export function createDemoBackend(assetBaseUrl: string): Backend {
       if (check.finishesPlan) {
         e.status = 'finished';
         e.timesFinished += 1;
+        addMilestone(s, { kind: 'plan', slug: plan.slug, title: plan.title, days: plan.days });
       }
       const badges = awardBadges(s);
       await save();
