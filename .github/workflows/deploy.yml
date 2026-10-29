@@ -40,7 +40,7 @@ jobs:
         run: bash supabase/scripts/deploy-db.sh
       - name: Deploy the reminder function
         if: ${{ vars.VAPID_PUBLIC_KEY != '' }}
-        run: npx --yes supabase@2 functions deploy send-reminders --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
+        run: npx --yes supabase@2 functions deploy send-notifications --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
 
   website:
     needs: database

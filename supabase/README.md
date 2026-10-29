@@ -8,7 +8,7 @@ Schema, row-level security, functions, seed data and Edge Functions.
 | `seed/plans.sql` | The 9 ready-made reading plans (generated: `pnpm --filter @bible-app/db generate:plans`) |
 | `seed/generated/bible_*.tsv` | Bible verses for search (generated: `pnpm bible:import`, not committed) |
 | `seed/dev-sample-data.sql` | Sample users for local development only (refuses to run if real users exist) |
-| `functions/send-reminders/` | Edge Function that sends the daily reminder by Web Push |
+| `functions/send-notifications/` | Edge Function that sends the daily reminder and social notifications by Web Push |
 | `tests/` | Integration tests that run every migration on a fresh Postgres database |
 
 ## Set up the hosted project (once)
@@ -30,13 +30,13 @@ Schema, row-level security, functions, seed data and Edge Functions.
 5. Reminders: generate VAPID keys (`npx web-push generate-vapid-keys`), then
    ```sh
    npx supabase secrets set VAPID_PUBLIC_KEY=... VAPID_PRIVATE_KEY=... VAPID_SUBJECT=mailto:you@example.com CRON_SECRET=<random>
-   npx supabase functions deploy send-reminders --no-verify-jwt
+   npx supabase functions deploy send-notifications --no-verify-jwt
    ```
    and schedule it in the SQL editor (pg_cron + pg_net are available on every Supabase project):
    ```sql
-   select cron.schedule('send-reminders', '*/15 * * * *', $$
+   select cron.schedule('send-notifications', '*/5 * * * *', $$
      select net.http_post(
-       url := 'https://<project-ref>.supabase.co/functions/v1/send-reminders',
+       url := 'https://<project-ref>.supabase.co/functions/v1/send-notifications',
        headers := jsonb_build_object('Authorization', 'Bearer <CRON_SECRET>')
      );
    $$);
