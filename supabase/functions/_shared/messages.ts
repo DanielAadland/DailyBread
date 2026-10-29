@@ -23,6 +23,7 @@ export const SOCIAL_MESSAGES: Record<string, Record<string, string>> = {
     follow: '{name} started following you',
     follow_request: '{name} would like to follow you',
     follow_accepted: '{name} accepted your follow request',
+    nudge: '{name} is cheering you on. Today’s reading is ready when you are.',
   },
 };
 
