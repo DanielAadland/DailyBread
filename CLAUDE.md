@@ -29,14 +29,17 @@ supabase/       SQL migrations (schema, RLS, functions), seed data, Edge Functio
 ### App architecture (apps/app/src)
 
 ```
-app/            Routes (Expo Router). (auth) sign-in/up, onboarding, (tabs) today/read/plans/profile, legal.
+app/            Routes (Expo Router). (auth) sign-in/up, onboarding, (tabs) today/read/feed/plans/profile, legal.
+                feed/: feed, compose, post/[id], people, notifications, u/[username]. profile/moderation: admin queue.
 api/            Backend interface (types.ts) with two implementations:
                   supabase-backend.ts  production (Supabase Auth, tables with RLS, RPC functions)
                   demo-backend.ts      no server: data in AsyncStorage, rules from @bible-app/core
+                  demo-social.ts       the social half of the demo backend, with seeded people (Sam, Jo, Maria)
                 hooks.ts (React Query), access.ts (which area a visitor belongs in), BackendProvider.tsx
 bible/          StaticBibleProvider setup, chapter/passage hooks, book names, last-read position
 theme/          Design tokens ("first light" palette, Literata + Figtree, spacing) and ThemeProvider
-ui/             Txt, Button, Screen, TextField, DawnArc, VerseList, settings panels, small parts in misc.tsx
+ui/             Txt, Button, Screen, TextField, DawnArc, VerseList, settings panels, small parts in misc.tsx;
+                social parts: PostCard, PersonRow, FollowButton, Avatar, ActionSheet, ReportDialog
 lib/            Web Push subscription, time helpers
 ```
 
@@ -49,6 +52,11 @@ lib/            Web Push subscription, time helpers
   Pressable's style function is lost (layout breaks).
 - `npx expo install` can't reach Expo's servers from the build workspace; take versions from
   `node_modules/expo/bundledNativeModules.json` and `pnpm add` them.
+- Toggle buttons (reactions) use `aria-pressed`; `accessibilityState.selected` is not rendered on web buttons.
+- Inactive tab screens stay mounted (aria-hidden), so e2e locators may match twice: use `getByRole` and `.first()`.
+- Social rules (visibility, content filter, rate limits, feed window) live in `packages/core/src/social.ts` and are
+  mirrored in `supabase/migrations/20261030000100_social.sql`. All social writes go through RPCs; tables have no
+  direct write grants.
 - Visual check: `pnpm --filter app build:web`, serve `apps/app/dist`, screenshot with headless Chromium.
 
 ## Conventions
@@ -81,6 +89,13 @@ lib/            Web Push subscription, time helpers
 | 2026-10-29 | Reminder times on 15-minute steps; quoted search phrases also matched literally | One job run per reminder; Postgres full-text search drops small words. |
 | 2026-10-29 | Deploy through GitHub Actions (Supabase CLI + Cloudflare Pages) | The build workspace can't reach Supabase or Cloudflare; secrets stay in GitHub. |
 | 2026-10-29 | Web output "single" (SPA) for now | Simplest with client-side auth; static rendering can come later for faster first load. |
+| 2026-10-30 | Feed: people you follow + yourself, newest first, last 14 days, pages of 20 behind a "Show older posts" button, then "You're all caught up" | The brief's "feeds end" rule; no infinite scroll. Light ranking can come later. |
+| 2026-10-30 | Visibility: public = follow instantly, friends = follow request, private = can't be found or followed | One setting covers profile and posts; teens can stay private. |
+| 2026-10-30 | Verse posts store a snapshot of the verse text and translation | The post reads the same even if the user switches translation; text is public domain. |
+| 2026-10-30 | Automatic filter: no links, a small blocked-word list (with leetspeak normalisation), length limits; rate limits 10 posts/day, 20 comments/hour, 20 reports/day | Cheap first line of defence; moderators handle the rest. |
+| 2026-10-30 | Moderation lives in the app at /profile/moderation (admins only, `profiles.is_admin`) instead of a separate admin app | One codebase to maintain; RPCs check admin rights server-side. |
+| 2026-10-30 | Milestone posts are automatic only when "Share milestones" is on (default on); each can be hidden | Celebrates progress without forcing it. "First reading" is never posted. |
+| 2026-10-30 | Social push (comments, reactions, follows) through the same Edge Function as reminders, same daily cap and quiet hours | One delivery path; respects the notification limits from the brief. |
 
 ## Environment
 

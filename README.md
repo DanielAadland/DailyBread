@@ -5,7 +5,7 @@ no endless feed. The goal is more days per week with the Bible, not more minutes
 
 Website first, then desktop (Tauri) and mobile (Expo).
 
-## Status: Phase 1 (web MVP)
+## Status: Phase 2 (social)
 
 | Area | State |
 | --- | --- |
@@ -15,7 +15,9 @@ Website first, then desktop (Tauri) and mobile (Expo).
 | Daily habit | Streaks in the user's timezone, streak freezes, badges, "Done for today", the 7-day dawn arc |
 | Reminders | One daily reminder by Web Push at a chosen time, quiet hours, daily cap, all switchable |
 | Privacy | Notes and highlights always private, data export, account deletion, data stored in Zurich |
-| Coming next | Phase 2: profiles, follows, feed, reactions, comments, moderation tools |
+| Social | Public profiles, follow / follow requests, a feed that ends, verse shares from the reader, reflections from plan days, prayer requests, automatic milestone posts, reactions (Amen, Praying, Encouraged), live comments, notifications |
+| Safety | Report posts, comments and people; block and mute; link and word filter; posting rate limits; moderation queue for admins; community guidelines |
+| Coming next | Phase 3: groups, group plans, daily discussion threads, group streaks |
 
 ## Try it locally
 
@@ -36,6 +38,14 @@ pnpm typecheck
 ```
 
 Database tests run every migration on a fresh Postgres; see [supabase/README.md](supabase/README.md).
+
+## Making someone a moderator
+
+Moderators see **Profile → Moderation**. There is deliberately no button for this; run it in the Supabase SQL editor:
+
+```sql
+update public.profiles set is_admin = true where username = 'their-username';
+```
 
 ## Deployment
 
