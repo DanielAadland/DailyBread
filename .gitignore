@@ -10,3 +10,5 @@ apps/app/public/bible/
 supabase/seed/generated/
 .DS_Store
 packages/bible/data/source/
+test-results/
+playwright-report/

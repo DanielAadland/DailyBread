@@ -35,3 +35,9 @@ jobs:
         run: pnpm --filter @bible-app/db generate:plans && git diff --exit-code supabase/seed/plans.sql
       - run: pnpm typecheck
       - run: pnpm test
+      - name: Build the website in demo mode
+        run: pnpm --filter app build:web
+      - name: End-to-end tests
+        run: |
+          pnpm --filter app exec playwright install --with-deps chromium
+          pnpm --filter app test:e2e

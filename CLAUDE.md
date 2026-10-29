@@ -14,6 +14,7 @@ The goal metric is **days per week people read**, not time in the app.
 | Rebuild Bible text | `pnpm bible:import` (downloads sources, writes `apps/app/public/bible/` and `supabase/seed/generated/`) |
 | Database tests | `pnpm db:test` (needs a local Postgres, see `supabase/README.md`) |
 | Web build | `pnpm --filter app build:web` → `apps/app/dist` |
+| End-to-end tests | `pnpm --filter app test:e2e` (after a demo-mode web build) |
 
 ## Layout
 

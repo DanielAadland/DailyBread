@@ -33,6 +33,7 @@
     "react-native-web": "~0.21.4"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@types/react": "~19.3.0",
     "typescript": "~6.0.3",
     "vitest": "^5.0.5"
@@ -42,7 +43,8 @@
     "web": "expo start --web",
     "build:web": "expo export --platform web",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test"
   },
   "private": true
 }
