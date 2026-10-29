@@ -10,6 +10,8 @@ const env = {
   vapidPublicKey: process.env.EXPO_PUBLIC_VAPID_PUBLIC_KEY ?? '',
   /** Show "Continue with Google" only once the Google provider is set up in Supabase. */
   googleSignIn: process.env.EXPO_PUBLIC_ENABLE_GOOGLE === 'true',
+  /** The public website, for links shared from the native apps (invite links). */
+  siteUrl: (process.env.EXPO_PUBLIC_SITE_URL ?? 'https://dailybread.pages.dev').replace(/\/$/, ''),
 };
 
 export const config = {

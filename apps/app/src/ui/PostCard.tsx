@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useState, type ComponentProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { useBlock, useDeletePost, useReact, useSetMuted, useSetPostHidden } from '../api/hooks';
+import { useBlock, useDeletePost, usePinGroupPost, useReact, useRemoveGroupPost, useSetMuted, useSetPostHidden } from '../api/hooks';
 import { REACTION_KINDS, type Post, type ReactionKind } from '../api/types';
 import { useBookNames } from '../bible/useBible';
 import { language } from '../i18n';
@@ -28,8 +28,11 @@ const REACTION_ICONS_ON: Record<ReactionKind, ComponentProps<typeof Ionicons>['n
   encouraged: 'sunny',
 };
 
-/** One post in the feed, a profile, or on its own page (`detailed`). */
-export function PostCard({ post, detailed = false }: { post: Post; detailed?: boolean }) {
+/**
+ * One post in the feed, a profile, a group, or on its own page (`detailed`).
+ * `inGroup` leaves out the "in <group>" label on the group's own page.
+ */
+export function PostCard({ post, detailed = false, inGroup = false }: { post: Post; detailed?: boolean; inGroup?: boolean }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const router = useRouter();
@@ -39,6 +42,9 @@ export function PostCard({ post, detailed = false }: { post: Post; detailed?: bo
   const setHidden = useSetPostHidden();
   const mute = useSetMuted();
   const block = useBlock();
+  const pin = usePinGroupPost();
+  const removeFromGroup = useRemoveGroupPost();
+  const [confirmRemove, setConfirmRemove] = useState(false);
   const [menu, setMenu] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -49,7 +55,15 @@ export function PostCard({ post, detailed = false }: { post: Post; detailed?: bo
   const openAuthor = () => post.author.username && router.push(`/feed/u/${post.author.username}`);
   const openPost = () => router.push(`/feed/post/${post.id}`);
 
-  const actions: SheetAction[] = post.isMine
+  const moderation: SheetAction[] = post.canModerate
+    ? [
+        ...(post.groupDay === null
+          ? [{ label: post.pinned ? t('post.unpin') : t('post.pin'), icon: 'pin-outline' as const, onPress: () => pin.mutate({ postId: post.id, pinned: !post.pinned }) }]
+          : []),
+        ...(!post.isMine ? [{ label: t('post.removeFromGroup'), icon: 'remove-circle-outline' as const, danger: true, onPress: () => setConfirmRemove(true) }] : []),
+      ]
+    : [];
+  const own: SheetAction[] = post.isMine
     ? [
         ...(post.type === 'milestone'
           ? [{ label: post.hidden ? t('post.show') : t('post.hide'), icon: post.hidden ? ('eye-outline' as const) : ('eye-off-outline' as const), onPress: () => setHidden.mutate({ id: post.id, hidden: !post.hidden }) }]
@@ -61,6 +75,7 @@ export function PostCard({ post, detailed = false }: { post: Post; detailed?: bo
         { label: t('post.mute', { name }), icon: 'volume-mute-outline', onPress: () => mute.mutate({ userId: post.author.id, muted: true }) },
         { label: t('post.block', { name }), icon: 'ban-outline', danger: true, onPress: () => block.mutate(post.author.id) },
       ];
+  const actions = [...moderation, ...own];
 
   return (
     <View style={styles.card} role="article" aria-label={t('post.label', { name, type: t(`post.types.${post.type}`) })}>
@@ -72,13 +87,38 @@ export function PostCard({ post, detailed = false }: { post: Post; detailed?: bo
               {name}
             </Txt>
             <Txt variant="small" tone="mist" numberOfLines={1}>
-              {`${t(`post.types.${post.type}`)}, ${relativeTime(post.createdAt, language)}`}
+              {`${post.groupDay !== null ? t('post.dayReply', { day: post.groupDay }) : t(`post.types.${post.type}`)}, ${relativeTime(post.createdAt, language)}`}
             </Txt>
           </View>
         </Pressable>
         <IconButton icon="ellipsis-horizontal" label={t('post.more')} onPress={() => setMenu(true)} size={20} />
       </View>
 
+      {post.pinned || (post.group && !inGroup) ? (
+        <View style={styles.meta}>
+          {post.pinned ? (
+            <View style={styles.metaItem}>
+              <Ionicons name="pin" size={14} color={colors.dawn} />
+              <Txt variant="small" tone="mist">
+                {t('post.pinned')}
+              </Txt>
+            </View>
+          ) : null}
+          {post.group && !inGroup ? (
+            <Pressable
+              accessibilityRole="link"
+              accessibilityLabel={t('post.inGroupLabel', { name: post.group.name })}
+              onPress={() => router.push(`/feed/groups/${post.group!.id}`)}
+              style={styles.metaItem}
+            >
+              <Ionicons name="people-outline" size={14} color={colors.tide} />
+              <Txt variant="small" tone="tide">
+                {t('post.inGroup', { name: post.group.name })}
+              </Txt>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
       {post.hidden ? <Txt variant="small" tone="mist">{t('post.hiddenNote')}</Txt> : null}
 
       <Pressable onPress={detailed ? undefined : openPost} disabled={detailed} accessibilityRole={detailed ? undefined : 'link'} accessibilityLabel={detailed ? undefined : t('post.open')}>
@@ -90,7 +130,7 @@ export function PostCard({ post, detailed = false }: { post: Post; detailed?: bo
             </Txt>
           </View>
         ) : null}
-        {post.type === 'reflection' && reference ? (
+        {post.type === 'reflection' && reference && post.groupDay === null ? (
           <Txt variant="label" tone="tide" style={{ marginBottom: SPACE.xs }}>
             {reference}
           </Txt>
@@ -108,7 +148,7 @@ export function PostCard({ post, detailed = false }: { post: Post; detailed?: bo
         ) : null}
       </Pressable>
 
-      {range && post.type !== 'prayer' ? (
+      {range && post.type !== 'prayer' && post.groupDay === null ? (
         <View style={{ alignItems: 'flex-start' }}>
           <Button
             label={t('post.readPassage')}
@@ -166,6 +206,16 @@ export function PostCard({ post, detailed = false }: { post: Post; detailed?: bo
         </View>
       ) : null}
 
+      {confirmRemove ? (
+        <View style={[styles.confirm, { borderColor: colors.rule }]} role="alertdialog">
+          <Txt>{t('post.removeConfirm', { name })}</Txt>
+          <View style={{ flexDirection: 'row', gap: SPACE.sm }}>
+            <Button label={t('post.removeFromGroup')} variant="danger" loading={removeFromGroup.isPending} onPress={() => removeFromGroup.mutate(post.id, { onSuccess: () => detailed && router.back() })} />
+            <Button label={t('common.cancel')} variant="quiet" onPress={() => setConfirmRemove(false)} />
+          </View>
+        </View>
+      ) : null}
+
       <ActionSheet title={t('post.more')} actions={actions} visible={menu} onClose={() => setMenu(false)} />
       <ReportDialog target={reporting ? { type: 'post', id: post.id, authorId: post.author.id, authorName: name } : null} onClose={() => setReporting(false)} />
     </View>
@@ -180,5 +230,7 @@ const styles = StyleSheet.create({
   milestone: { flexDirection: 'row', alignItems: 'center', gap: SPACE.sm },
   footer: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   reaction: { flexDirection: 'row', alignItems: 'center', gap: 5, minHeight: 36, paddingHorizontal: 10, borderRadius: RADIUS.pill, borderWidth: 1 },
+  meta: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACE.md },
+  metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 24 },
   confirm: { borderWidth: 1, borderRadius: RADIUS.control, padding: SPACE.md, gap: SPACE.sm },
 });

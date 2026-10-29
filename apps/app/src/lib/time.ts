@@ -30,3 +30,10 @@ export function formatTime(hhmm: string, language: string): string {
   const d = new Date(Date.UTC(2000, 0, 1, Math.floor(minutes / 60), minutes % 60));
   return d.toLocaleTimeString(language, { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' });
 }
+
+/** A local date ("2026-11-02") as "Monday, 2 November" in the user's language. */
+export function formatLocalDate(date: string, language: string): string {
+  const d = new Date(`${date}T12:00:00Z`);
+  if (Number.isNaN(d.getTime())) return date;
+  return d.toLocaleDateString(language, { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+}

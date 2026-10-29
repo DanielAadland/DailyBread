@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
-import { useConnections, useFeed, useNotifications, useProfile } from '../../../api/hooks';
+import { useConnections, useFeed, useMyGroups, useNotifications, useProfile } from '../../../api/hooks';
 import { useTheme } from '../../../theme/ThemeProvider';
 import { SPACE } from '../../../theme/tokens';
 import { Button, IconButton } from '../../../ui/Button';
@@ -18,6 +18,7 @@ export default function FeedScreen() {
   const router = useRouter();
   const feed = useFeed();
   const profile = useProfile();
+  const groupCount = useMyGroups().data?.length ?? 0;
   const notifications = useNotifications();
   const requests = useConnections('requests');
   const unread = (notifications.data ?? []).filter((n) => !n.read).length;
@@ -41,8 +42,14 @@ export default function FeedScreen() {
         <IconButton icon="person-add-outline" label={t('feed.findPeople')} onPress={() => router.push('/feed/people')} />
       </View>
 
-      <View style={{ alignItems: 'flex-start' }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SPACE.sm }}>
         <Button label={t('feed.newPost')} icon="create-outline" variant="secondary" href="/feed/compose" />
+        <Button
+          label={groupCount > 0 ? t('feed.groupsCount', { count: groupCount }) : t('groups.title')}
+          icon="people-circle-outline"
+          variant="secondary"
+          href="/feed/groups"
+        />
       </View>
 
       {profile.data && !profile.data.username ? (

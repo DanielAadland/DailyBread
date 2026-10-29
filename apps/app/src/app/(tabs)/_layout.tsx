@@ -1,12 +1,13 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Redirect, Tabs } from 'expo-router';
+import { Redirect, Tabs, useRouter } from 'expo-router';
 import { HOME_FOR, useAccess } from '../../api/access';
-import type { ComponentProps } from 'react';
+import { useEffect, type ComponentProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBackend } from '../../api/BackendProvider';
 import { useNotifications } from '../../api/hooks';
+import { takePendingInvite } from '../../lib/invite';
 import { useTheme } from '../../theme/ThemeProvider';
 import { FONTS, LAYOUT, RADIUS, SPACE } from '../../theme/tokens';
 import { Logo } from '../../ui/Logo';
@@ -28,6 +29,15 @@ export default function TabsLayout() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const access = useAccess();
+  const router = useRouter();
+
+  // An invite link opened before signing up: offer it now.
+  useEffect(() => {
+    if (access !== 'ready') return;
+    takePendingInvite().then((code) => {
+      if (code) router.push(`/join/${code}`);
+    });
+  }, [access, router]);
 
   if (access !== 'ready') return <Redirect href={HOME_FOR[access]} />;
 

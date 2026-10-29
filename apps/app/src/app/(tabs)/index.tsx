@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { useBackend } from '../../api/BackendProvider';
-import { useProfile, useToday } from '../../api/hooks';
+import { useMyGroups, useProfile, useToday } from '../../api/hooks';
 import type { TodayPlan } from '../../api/types';
 import { useBookNames, useLastRead } from '../../bible/useBible';
 import { language } from '../../i18n';
@@ -12,6 +12,7 @@ import { useTheme } from '../../theme/ThemeProvider';
 import { FONTS, SPACE } from '../../theme/tokens';
 import { Button } from '../../ui/Button';
 import { DawnArc } from '../../ui/DawnArc';
+import { GroupCard } from '../../ui/GroupCard';
 import { Divider, ErrorState, Loading, Notice, ProgressBar, Section } from '../../ui/misc';
 import { Screen } from '../../ui/Screen';
 import { Txt } from '../../ui/Text';
@@ -119,7 +120,25 @@ export default function TodayScreen() {
           </View>
         )}
       </Section>
+
+      <TodayGroups />
     </Screen>
+  );
+}
+
+/** Your groups and how many have read today. Hidden until you're in one. */
+function TodayGroups() {
+  const { t } = useTranslation();
+  const groups = useMyGroups();
+  if (!groups.data || groups.data.length === 0) return null;
+  return (
+    <Section title={t('today.groupsTitle')}>
+      <View style={{ gap: SPACE.sm }}>
+        {groups.data.map((g) => (
+          <GroupCard key={g.id} group={g} />
+        ))}
+      </View>
+    </Section>
   );
 }
 

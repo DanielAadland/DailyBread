@@ -95,7 +95,6 @@ export function ReminderSettings({ compact = false }: { compact?: boolean }) {
           <ToggleRow label={t('reminders.socialComments')} value={p.socialComments} onChange={(v) => update.mutate({ socialComments: v })} />
           <ToggleRow label={t('reminders.socialReactions')} value={p.socialReactions} onChange={(v) => update.mutate({ socialReactions: v })} />
           <ToggleRow label={t('reminders.socialNudges')} value={p.socialNudges} onChange={(v) => update.mutate({ socialNudges: v })} />
-          <ToggleRow label={t('reminders.socialGroups')} value={p.socialGroupActivity} onChange={(v) => update.mutate({ socialGroupActivity: v })} />
         </>
       ) : null}
       {update.error ? <Notice tone="warning">{errorMessage(t, update.error)}</Notice> : null}

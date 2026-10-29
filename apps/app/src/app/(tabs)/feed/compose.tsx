@@ -4,10 +4,11 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
-import { useCreatePost, useProfile } from '../../../api/hooks';
+import { useCreatePost, useMyGroups, useProfile } from '../../../api/hooks';
 import { usePassage, useBookNames, useTranslationId } from '../../../bible/useBible';
 import { SPACE } from '../../../theme/tokens';
 import { Button } from '../../../ui/Button';
+import { RadioList } from '../../../ui/GroupForm';
 import { errorMessage, Loading, Notice, Segmented } from '../../../ui/misc';
 import { Screen } from '../../../ui/Screen';
 import { Txt } from '../../../ui/Text';
@@ -20,7 +21,7 @@ type ComposeType = 'verse' | 'reflection' | 'prayer';
  * `?type=reflection&passage=…&body=…` comes from a finished plan day.
  */
 export default function ComposeScreen() {
-  const params = useLocalSearchParams<{ type?: string; passage?: string; body?: string }>();
+  const params = useLocalSearchParams<{ type?: string; passage?: string; body?: string; group?: string }>();
   const { t } = useTranslation();
   const router = useRouter();
   const profile = useProfile();
@@ -33,6 +34,9 @@ export default function ComposeScreen() {
   const [body, setBody] = useState(params.body ?? '');
   const [refInput, setRefInput] = useState(params.passage && fromKey(params.passage) ? referenceFromKey(params.passage) : '');
   const [localError, setLocalError] = useState<string | null>(null);
+  const groups = useMyGroups();
+  // '' = my followers (the feed); otherwise a group id.
+  const [target, setTarget] = useState(params.group ?? '');
 
   const parsed = useMemo(() => parseReference(refInput), [refInput]);
   const passageKey = type === 'verse' && params.passage ? params.passage : parsed ? toKey(parsed) : null;
@@ -45,8 +49,8 @@ export default function ComposeScreen() {
     if (problem) return setLocalError(t(`errors.${problem === 'empty' ? 'content_empty' : problem === 'too_long' ? 'content_too_long' : problem}`));
     if (type !== 'prayer' && !passageKey) return setLocalError(t('compose.needPassage'));
     create.mutate(
-      { type, body: body.trim(), passage: passageKey ?? undefined, translation, verseText: verseText ?? undefined },
-      { onSuccess: () => router.replace('/feed') },
+      { type, body: body.trim(), passage: passageKey ?? undefined, translation, verseText: verseText ?? undefined, groupId: target || undefined },
+      { onSuccess: () => router.replace(target ? `/feed/groups/${target}` : '/feed') },
     );
   };
 
@@ -104,8 +108,20 @@ export default function ComposeScreen() {
         maxLength={SOCIAL_LIMITS.postMax}
       />
 
+      {(groups.data?.length ?? 0) > 0 ? (
+        <RadioList<string>
+          label={t('compose.whereLabel')}
+          value={target}
+          onChange={setTarget}
+          options={[
+            { value: '', label: t('compose.toFollowers'), hint: audience },
+            ...(groups.data ?? []).map((g) => ({ value: g.id, label: g.name, hint: t('compose.groupHint') })),
+          ]}
+        />
+      ) : null}
+
       <Txt variant="small" tone="mist">
-        {audience}{' '}
+        {target ? t('compose.groupHint') : audience}{' '}
         <Txt variant="small" tone="tide" accessibilityRole="link" onPress={() => router.push('/legal/guidelines')}>
           {t('compose.guidelines')}
         </Txt>

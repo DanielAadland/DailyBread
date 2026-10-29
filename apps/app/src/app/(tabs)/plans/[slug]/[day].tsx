@@ -4,7 +4,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
-import { useCompleteReading, useEnrolments, usePlan, useSetPlanStatus, useStartPlan } from '../../../../api/hooks';
+import { useCompleteReading, useEnrolments, useMyGroups, usePlan, useSetPlanStatus, useStartPlan } from '../../../../api/hooks';
 import type { CompleteResult } from '../../../../api/types';
 import { usePassage, useBookNames, useTranslationId } from '../../../../bible/useBible';
 import { useTheme } from '../../../../theme/ThemeProvider';
@@ -25,6 +25,7 @@ export default function PlanDayScreen() {
   const plan = usePlan(params.slug);
   const enrolments = useEnrolments();
   const complete = useCompleteReading();
+  const myGroups = useMyGroups();
   const start = useStartPlan();
   const setStatus = useSetPlanStatus();
   const translation = useTranslationId();
@@ -81,6 +82,8 @@ export default function PlanDayScreen() {
           day={day}
           total={p.days}
           onToday={() => router.navigate('/')}
+          group={myGroups.data?.find((g) => g.plan?.slug === p.slug && g.plan.day === day) ?? null}
+          onGroup={(groupId) => router.push(`/feed/groups/${groupId}/day/${day}`)}
           onShare={() => {
             const params = new URLSearchParams({ type: 'reflection', passage: entry.readings[0] ?? '' });
             if (reflection.trim()) params.set('body', reflection.trim());
@@ -171,6 +174,8 @@ function Celebration({
   total,
   onToday,
   onShare,
+  group,
+  onGroup,
   onNext,
 }: {
   result: CompleteResult;
@@ -178,6 +183,9 @@ function Celebration({
   total: number;
   onToday: () => void;
   onShare: () => void;
+  /** A group reading this plan whose day today is this day: talk about it there. */
+  group: { id: string; name: string } | null;
+  onGroup: (groupId: string) => void;
   onNext?: () => void;
 }) {
   const { t } = useTranslation();
@@ -201,6 +209,9 @@ function Celebration({
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SPACE.sm, justifyContent: 'center' }}>
         <Button label={t('plans.backToToday')} onPress={onToday} />
         {onNext && !result.finishedPlan ? <Button label={t('plans.nextDayOf', { day: day + 1, total })} variant="secondary" onPress={onNext} /> : null}
+        {group ? (
+          <Button label={t('plans.talkInGroup', { name: group.name })} icon="chatbubbles-outline" variant="secondary" onPress={() => onGroup(group.id)} />
+        ) : null}
         <Button label={t('plans.shareReflection')} icon="share-social-outline" variant="quiet" onPress={onShare} />
       </View>
     </View>

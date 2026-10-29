@@ -104,7 +104,8 @@
     "continueReading": "Continue {{place}}",
     "startDay": "Start day {{day}}",
     "planDoneToday": "Done today",
-    "readAhead": "Read the next day"
+    "readAhead": "Read the next day",
+    "groupsTitle": "Your groups"
   },
   "plans": {
     "title": "Plans",
@@ -150,7 +151,8 @@
     "newBadge": "New badge: {{name}}",
     "backToToday": "Back to Today",
     "nextDayOf": "Day {{day}} of {{total}}",
-    "shareReflection": "Share a reflection"
+    "shareReflection": "Share a reflection",
+    "talkInGroup": "Talk about it in {{name}}"
   },
   "read": {
     "title": "Read",
@@ -339,10 +341,10 @@
     "quietEnd": "Quiet hours end",
     "off": "Off",
     "dailyCap": "Most notifications a day",
-    "socialIntro": "Notifications from friends and groups (coming with the social features):",
-    "socialComments": "Comments on your reflections",
+    "socialIntro": "Notifications from friends and groups:",
+    "socialComments": "Comments on your posts",
     "socialReactions": "Reactions",
-    "socialNudges": "Nudges from friends",
+    "socialNudges": "New followers and encouragement from your groups",
     "socialGroups": "Group activity"
   },
   "legal": {
@@ -356,7 +358,7 @@
       },
       {
         "title": "Who sees your posts",
-        "body": "Your profile setting decides it: public (anyone signed in), friends (people you accept), or private (only you). Blocking someone hides your profile and posts from them. When someone reports content, moderators can see the reported content."
+        "body": "Your profile setting decides it: public (anyone signed in), friends (people you accept), or private (only you). Posts you write in a group are seen only by its members. Group members also see your name and whether you've read today, whatever your profile setting. Blocking someone hides your profile and posts from them. When someone reports content, moderators can see the reported content."
       },
       {
         "title": "Where it is stored",
@@ -476,7 +478,19 @@
     "cannot_block_self": "You can't block yourself.",
     "report_target_not_found": "That's no longer available to report.",
     "not_admin": "Only moderators can see this page.",
-    "invalid_action": "That action isn't possible here."
+    "invalid_action": "That action isn't possible here.",
+    "group_not_found": "This group isn't available.",
+    "invite_not_found": "This invite link doesn't work any more. Ask for a new one.",
+    "group_name_too_short": "Give the group a name of at least 3 characters.",
+    "group_name_too_long": "That name is a bit long. Please shorten it.",
+    "invalid_group_plan": "Choose a plan and a start day, or no plan.",
+    "group_limit_reached": "You're in as many groups as you can be. Leave one to join or start another.",
+    "group_full": "This group is full.",
+    "owner_cannot_leave": "Hand the group to someone else first (Members → Make owner), or delete it.",
+    "member_not_found": "This person isn't in the group any more.",
+    "already_read": "They've already read today.",
+    "too_many_pinned": "A group can have 3 pinned posts. Unpin one first.",
+    "not_allowed": "Only group admins can do that."
   },
   "books": {
     "GEN": "Genesis",
@@ -566,7 +580,9 @@
     "showOlder": "Show older posts",
     "needUsername": "Choose a username so friends can find you and open your profile.",
     "chooseUsername": "Choose one",
-    "newPost": "Write a post"
+    "newPost": "Write a post",
+    "groupsCount_one": "Groups ({{count}})",
+    "groupsCount_other": "Groups ({{count}})"
   },
   "compose": {
     "title": "New post",
@@ -591,7 +607,10 @@
       "private": "Your profile is private, so only you can see this post."
     },
     "guidelines": "Community guidelines",
-    "post": "Post"
+    "post": "Post",
+    "whereLabel": "Where to share",
+    "toFollowers": "With my followers",
+    "groupHint": "Only members of this group can see it."
   },
   "post": {
     "title": "Post",
@@ -633,7 +652,15 @@
     "deleteConfirm": "Delete this post? Comments and reactions on it will be deleted too.",
     "report": "Report post",
     "mute": "Mute {{name}}",
-    "block": "Block {{name}}"
+    "block": "Block {{name}}",
+    "dayReply": "Day {{day}}",
+    "inGroup": "in {{name}}",
+    "inGroupLabel": "Posted in {{name}}. Open the group",
+    "pinned": "Pinned",
+    "pin": "Pin to the top of the group",
+    "unpin": "Unpin",
+    "removeFromGroup": "Remove from the group",
+    "removeConfirm": "Remove this post by {{name}} from the group? Only group admins can do this."
   },
   "report": {
     "title_post": "Report post",
@@ -716,7 +743,8 @@
       "reaction": "{{name}} reacted to your post",
       "follow": "{{name}} started following you",
       "follow_request": "{{name}} asked to follow you",
-      "follow_accepted": "{{name}} accepted your request"
+      "follow_accepted": "{{name}} accepted your request",
+      "nudge": "{{name}} is cheering you on in {{group}}. Today’s reading is ready when you are."
     }
   },
   "moderation": {
@@ -752,5 +780,160 @@
       "suspend_indefinitely": "Suspend indefinitely"
     },
     "liftSuspension": "Lift suspension"
+  },
+  "groups": {
+    "title": "Groups",
+    "intro": "Read the same plan with your small group, church, friends or family, and talk about each day together.",
+    "create": "Start a group",
+    "newTitle": "Start a group",
+    "createButton": "Create group",
+    "mine": "Your groups",
+    "noneYet": "You're not in a group yet. Start one, or join with an invite link.",
+    "joinWithCode": "Have an invite?",
+    "codeLabel": "Invite link or code",
+    "codeHint": "Paste the link someone sent you, or type the 10-letter code.",
+    "openInvite": "Open invite",
+    "discover": "Public groups",
+    "searchLabel": "Search public groups",
+    "noResults": "No public groups found.",
+    "noPublic": "No public groups to show yet.",
+    "join": "Join",
+    "joinLabel": "Join {{name}}",
+    "joinNamed": "Join {{name}}",
+    "joinPrivacy": "Members of a group see your name, posts in the group and whether you've read today, even if your profile is private.",
+    "open": "Open {{name}}",
+    "moreFor": "More options for {{name}}",
+    "memberCount_one": "{{count}} member",
+    "memberCount_other": "{{count}} members",
+    "kinds": {
+      "small_group": "Small group",
+      "church": "Church",
+      "friends": "Friends",
+      "family": "Family"
+    },
+    "access": {
+      "public": "Public",
+      "invite": "Invite only"
+    },
+    "accessHint": {
+      "public": "Anyone can find the group and join.",
+      "invite": "Only people with the invite link can join."
+    },
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "member": "Member"
+    },
+    "you": "You",
+    "planDay": "Day {{day}} of {{total}} · {{title}}",
+    "planStarts": "{{title}} starts {{date}}",
+    "planStartsOn": "Starts {{date}}. Everyone reads the same day together.",
+    "planFinished": "Finished {{title}}",
+    "planFinishedTogether": "You finished this plan together. An admin can choose the next one.",
+    "noPlanAdmin": "This group has no reading plan yet.",
+    "choosePlan": "Choose one",
+    "readToday": "{{count}} of {{total}} read today",
+    "streakShort_one": "{{count}}-day group streak",
+    "streakShort_other": "{{count}}-day group streak",
+    "streakLong_one": "Group streak: {{count}} day",
+    "streakLong_other": "Group streak: {{count}} days",
+    "streakLabel_one": "day together",
+    "streakLabel_other": "days together",
+    "streakRule": "A day counts for the group when at least half of its members read.",
+    "seeWho": "See who has read",
+    "todayTitle": "Today's reading",
+    "togetherTitle": "Reading together",
+    "youReadToday": "You've read today's portion.",
+    "readDay": "Read day {{day}}",
+    "openThread": "Today's conversation",
+    "invite": "Invite people",
+    "inviteLink": "Invite link",
+    "inviteLinkLabel": "Invite link: {{url}}",
+    "inviteMessage": "Join “{{name}}” on DailyBread and read the Bible with us: {{url}}",
+    "inviteHint": "Anyone with this link can join. You can reset it in the group settings.",
+    "copyLink": "Copy link",
+    "copied": "Copied",
+    "share": "Share",
+    "writePost": "Write in the group",
+    "noPosts": "No posts yet. Share a prayer request or a verse with the group.",
+    "endOfPosts": "That's everything in this group.",
+    "leave": "Leave group",
+    "leaveConfirm": "Leave {{name}}? You can join again with an invite link.",
+    "settings": "Group settings",
+    "membersTitle": "Members",
+    "today": {
+      "plan_day": "Read day {{day}}",
+      "read": "Read today",
+      "not_yet": "Not yet today"
+    },
+    "statusLabel": {
+      "plan_day": "Has read today's portion",
+      "read": "Has read today"
+    },
+    "nudge": "Cheer on",
+    "nudgeLabel": "Cheer {{name}} on",
+    "nudged": "Cheered on",
+    "nudgeExplain": "“Cheer on” sends a friendly note that today's reading is ready. Each person gets at most one from you a day.",
+    "memberActions": "Options for {{name}}",
+    "makeAdmin": "Make admin",
+    "removeAdmin": "Remove admin role",
+    "makeOwner": "Make owner",
+    "transferConfirm": "Make {{name}} the owner? You'll stay in the group as an admin.",
+    "removeMember": "Remove from group",
+    "removeConfirm": "Remove {{name}} from the group?",
+    "threadTitle": "Day {{day}}",
+    "dayShort": "Day {{day}}",
+    "prompt": "To talk about",
+    "readThisDay": "Read this day",
+    "threadHeading_one": "{{count}} reply",
+    "threadHeading_other": "{{count}} replies",
+    "threadEmpty": "No one has written yet. What stood out to you?",
+    "replyLabel": "Your thoughts on today's reading",
+    "replyHint": "Seen by the group's members.",
+    "sendReply": "Send",
+    "dayNotFound": "This day isn't part of the group's plan.",
+    "details": "Details",
+    "saved": "Saved",
+    "readingPlan": "Reading plan",
+    "planChangeNote": "Saving starts the chosen plan from the start day for everyone. Earlier conversations stay.",
+    "savePlan": "Save plan",
+    "resetLink": "Reset invite link",
+    "resetConfirm": "Make a new invite link? The old one will stop working.",
+    "deleteTitle": "Delete group",
+    "deleteExplain": "Deleting removes the group, its posts and conversations for everyone. This can't be undone.",
+    "deleteConfirm": "Delete {{name}} for everyone?",
+    "deleteButton": "Delete group",
+    "invitedTitle": "You've been invited to a group",
+    "invitedSignedOut": "DailyBread is a free app for reading the Bible every day, together. Create an account or sign in, and you'll come back to this invite.",
+    "notNow": "Not now",
+    "form": {
+      "name": "Group name",
+      "nameHint": "{{min}} to {{max}} characters.",
+      "description": "About the group (optional)",
+      "descriptionHint_one": "Up to {{count}} character.",
+      "descriptionHint_other": "Up to {{count}} characters.",
+      "kind": "What kind of group?",
+      "access": "Who can join?",
+      "plan": "Read a plan together",
+      "noPlan": "No plan for now",
+      "noPlanHint": "You can choose one later in the group settings.",
+      "planDays_one": "{{count}} day",
+      "planDays_other": "{{count}} days",
+      "start": "Start",
+      "startToday": "Today",
+      "startTomorrow": "Tomorrow",
+      "startMonday": "Next Monday",
+      "problems": {
+        "name_too_short": "Give the group a name of at least 3 characters.",
+        "name_too_long": "That name is a bit long. Please shorten it.",
+        "name_empty": "Give the group a name.",
+        "name_links_not_allowed": "Links aren't allowed in group names.",
+        "name_content_blocked": "Please choose a different name: it contains words that aren't allowed here.",
+        "description_too_long": "The description is a bit long. Please shorten it.",
+        "description_empty": "Add a short description.",
+        "description_links_not_allowed": "Links aren't allowed in the description.",
+        "description_content_blocked": "Please rephrase the description: it contains words that aren't allowed here."
+      }
+    }
   }
 }
