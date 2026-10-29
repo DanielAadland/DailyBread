@@ -5,7 +5,7 @@ no endless feed. The goal is more days per week with the Bible, not more minutes
 
 Website first, then desktop (Tauri) and mobile (Expo).
 
-## Status: Phase 2 (social)
+## Status: Phase 3 (groups)
 
 | Area | State |
 | --- | --- |
@@ -17,7 +17,8 @@ Website first, then desktop (Tauri) and mobile (Expo).
 | Privacy | Notes and highlights always private, data export, account deletion, data stored in Zurich |
 | Social | Public profiles, follow / follow requests, a feed that ends, verse shares from the reader, reflections from plan days, prayer requests, automatic milestone posts, reactions (Amen, Praying, Encouraged), live comments, notifications |
 | Safety | Report posts, comments and people; block and mute; link and word filter; posting rate limits; moderation queue for admins; community guidelines |
-| Coming next | Phase 3: groups, group plans, daily discussion threads, group streaks |
+| Groups | Small groups, churches, friends and families; public or invite-only with invite links; owner/admin/member roles; a shared reading plan with a conversation thread for each day; "who has read today", group streaks and gentle "cheer on" nudges; pinned posts and group moderation |
+| Coming next | Phase 4: verse cards (daily set, card creator, sharing) |
 
 ## Try it locally
 

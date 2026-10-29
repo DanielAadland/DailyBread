@@ -30,16 +30,21 @@ supabase/       SQL migrations (schema, RLS, functions), seed data, Edge Functio
 
 ```
 app/            Routes (Expo Router). (auth) sign-in/up, onboarding, (tabs) today/read/feed/plans/profile, legal.
-                feed/: feed, compose, post/[id], people, notifications, u/[username]. profile/moderation: admin queue.
+                feed/: feed, compose, post/[id], people, notifications, u/[username].
+                feed/groups/: list + discover, new, [id] (home), [id]/day/[day] (thread), [id]/members, [id]/settings.
+                join/[code]: invite links (signed-out visitors sign up first; lib/invite.ts keeps the code).
+                profile/moderation: admin queue.
 api/            Backend interface (types.ts) with two implementations:
                   supabase-backend.ts  production (Supabase Auth, tables with RLS, RPC functions)
                   demo-backend.ts      no server: data in AsyncStorage, rules from @bible-app/core
                   demo-social.ts       the social half of the demo backend, with seeded people (Sam, Jo, Maria)
+                  demo-groups.ts       groups in demo mode: "Morning Psalms" (you're a member) and a public group
                 hooks.ts (React Query), access.ts (which area a visitor belongs in), BackendProvider.tsx
 bible/          StaticBibleProvider setup, chapter/passage hooks, book names, last-read position
 theme/          Design tokens ("first light" palette, Literata + Figtree, spacing) and ThemeProvider
 ui/             Txt, Button, Screen, TextField, DawnArc, VerseList, settings panels, small parts in misc.tsx;
-                social parts: PostCard, PersonRow, FollowButton, Avatar, ActionSheet, ReportDialog
+                social parts: PostCard, PersonRow, FollowButton, Avatar, ActionSheet, ReportDialog;
+                group parts: GroupCard, GroupHeader (+ preview/join), GroupForm (fields, plan picker, RadioList), InvitePanel
 lib/            Web Push subscription, time helpers
 ```
 
@@ -53,10 +58,13 @@ lib/            Web Push subscription, time helpers
 - `npx expo install` can't reach Expo's servers from the build workspace; take versions from
   `node_modules/expo/bundledNativeModules.json` and `pnpm add` them.
 - Toggle buttons (reactions) use `aria-pressed`; `accessibilityState.selected` is not rendered on web buttons.
-- Inactive tab screens stay mounted (aria-hidden), so e2e locators may match twice: use `getByRole` and `.first()`.
+- Inactive tab screens and earlier stack screens stay mounted (aria-hidden), so e2e locators may match twice: use
+  `getByRole`, scope to a `region`, or `.filter({ visible: true }).first()`.
 - Social rules (visibility, content filter, rate limits, feed window) live in `packages/core/src/social.ts` and are
   mirrored in `supabase/migrations/20261030000100_social.sql`. All social writes go through RPCs; tables have no
   direct write grants.
+- Group rules (roles, invite codes, group plan day, group streak) live in `packages/core/src/groups.ts`, mirrored in
+  `supabase/migrations/20261031000100_groups.sql`.
 - Visual check: `pnpm --filter app build:web`, serve `apps/app/dist`, screenshot with headless Chromium.
 
 ## Conventions
@@ -96,6 +104,13 @@ lib/            Web Push subscription, time helpers
 | 2026-10-30 | Moderation lives in the app at /profile/moderation (admins only, `profiles.is_admin`) instead of a separate admin app | One codebase to maintain; RPCs check admin rights server-side. |
 | 2026-10-30 | Milestone posts are automatic only when "Share milestones" is on (default on); each can be hidden | Celebrates progress without forcing it. "First reading" is never posted. |
 | 2026-10-30 | Social push (comments, reactions, follows) through the same Edge Function as reminders, same daily cap and quiet hours | One delivery path; respects the notification limits from the brief. |
+| 2026-10-31 | Groups: public (findable, anyone joins) or invite-only (10-character link code, resettable); roles owner/admin/member; one owner, who hands over before leaving | Matches the brief; the invite code alphabet avoids look-alike characters so codes can be read aloud. |
+| 2026-10-31 | Group plan = one plan + start date; day N is the N-th day after the start for everyone. Members read it through their own enrolment, so it counts for their streak too | No second progress system; plan days can still be read in any order. |
+| 2026-10-31 | Each plan day has a thread: replies are reflections tied to that day's reading; they stay on the group page, not in the feed | Keeps the feed calm; the conversation lives where the group reads. |
+| 2026-10-31 | Group streak: a day counts when at least half of the members (who had joined by then) read; freezes don't count; today only adds once it counts | Encouraging for real groups where not everyone reads daily; never "broken" in the morning. |
+| 2026-10-31 | Group members see each other's names and "read today" status regardless of profile visibility; said plainly before joining and in the privacy policy | "Who has read today" is the point of a group. |
+| 2026-10-31 | "Cheer on" nudges: only to members who haven't read today, one per sender per person per ~day, at most 3 received a day; push respects the nudge switch, quiet hours and the daily cap | Accountability without pressure. |
+| 2026-10-31 | Group admins pin (max 3) and remove posts/comments in their group; reports still go to the app moderators | Local moderation for groups, global safety net stays. |
 
 ## Environment
 
