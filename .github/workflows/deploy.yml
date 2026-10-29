@@ -65,6 +65,9 @@ jobs:
             echo "Add the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID secrets." >&2
             exit 1
           fi
+          # Pasted secrets often carry a trailing newline; Wrangler rejects that.
+          echo "CLOUDFLARE_ACCOUNT_ID=$(printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | tr -d '[:space:]')" >> "$GITHUB_ENV"
+          echo "CLOUDFLARE_API_TOKEN=$(printf '%s' "$CLOUDFLARE_API_TOKEN" | tr -d '[:space:]')" >> "$GITHUB_ENV"
       # Wrangler's own messages are turned into annotations, so failures are readable from the run summary.
       - name: Create the Pages project (first deploy only)
         env:
