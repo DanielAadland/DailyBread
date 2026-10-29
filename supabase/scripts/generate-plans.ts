@@ -3,7 +3,7 @@
  * Every passage key is validated against the book list and the BSB verse counts.
  *   pnpm --filter @bible-app/db generate:plans
  */
-import { readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { BOOKS, fromKey, parseReference, toKey, type BookId } from '@bible-app/bible';
@@ -220,4 +220,21 @@ for (const plan of PLANS) {
 }
 lines.push('commit;', '');
 writeFileSync(join(root, 'supabase', 'seed', 'plans.sql'), lines.join('\n'));
+
+// The same plans as JSON, for the app's demo mode (runs without a database).
+mkdirSync(join(root, 'apps', 'app', 'public', 'demo'), { recursive: true });
+writeFileSync(
+  join(root, 'apps', 'app', 'public', 'demo', 'plans.json'),
+  JSON.stringify(
+    PLANS.map((p) => ({
+      id: p.slug,
+      slug: p.slug,
+      title: p.title,
+      description: p.description,
+      category: p.category,
+      sort: p.sort,
+      days: p.days.map((d, i) => ({ day: i + 1, readings: d.readings, reflectionPrompt: d.prompt })),
+    })),
+  ),
+);
 console.log(PLANS.map((p) => `${p.slug}: ${p.days.length} days`).join('\n'));

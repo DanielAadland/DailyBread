@@ -357,6 +357,15 @@ begin
       select count(*) from public.daily_activity a
        where a.user_id = v_uid and a.source <> 'freeze' and a.local_date > v_today - 7 and a.local_date <= v_today
     ),
+    -- The last 7 days, oldest first: 'read', 'freeze' or 'none'. Drives the Today screen's arc.
+    'week', (
+      select jsonb_agg(
+               case when a.source is null then 'none' when a.source = 'freeze' then 'freeze' else 'read' end
+               order by g2.d)
+        from generate_series(0, 6) as g(n)
+        cross join lateral (select v_today - 6 + g.n as d) g2(d)
+        left join public.daily_activity a on a.user_id = v_uid and a.local_date = g2.d
+    ),
     'plans', coalesce((
       select jsonb_agg(x.item order by x.started_at)
         from (

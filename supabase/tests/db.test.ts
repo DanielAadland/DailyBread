@@ -129,6 +129,7 @@ describe.skipIf(!available)('database', () => {
       expect(today.after.streak.read_today).toBe(true);
       expect(today.after.plans[0]).toMatchObject({ next_day: 2, completed: 1, completed_today: true });
       expect(today.after.days_read_last_7).toBe(1);
+      expect(today.after.week).toEqual(['none', 'none', 'none', 'none', 'none', 'none', 'read']);
     });
 
     it('counts a day once even when several readings are done', async () => {
@@ -168,6 +169,8 @@ describe.skipIf(!available)('database', () => {
       expect(afterFreeze).toMatchObject({ current: 3, freezes_left: 0 });
       const freezeRow = await db.client.query(`select source from public.daily_activity where user_id = $1 and local_date = '2026-11-03'`, [user]);
       expect(freezeRow.rows[0].source).toBe('freeze');
+      const week = await asUser(db.client, user, async (q) => (await q(`select public.get_today() as t`)).rows[0].t.week);
+      expect(week.slice(-4)).toEqual(['read', 'read', 'freeze', 'read']);
       // 5 November missed, no freeze left.
       const afterReset = await read('2026-11-06T09:00:00Z', 'JHN', 4);
       expect(afterReset).toMatchObject({ current: 1, longest: 3 });

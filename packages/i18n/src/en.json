@@ -1,0 +1,486 @@
+{
+  "app": {
+    "name": "Daybread",
+    "tagline": "A few minutes with the Bible, every day."
+  },
+  "common": {
+    "and": "and",
+    "back": "Back",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "delete": "Delete",
+    "save": "Save",
+    "loading": "Loading",
+    "tryAgain": "Try again",
+    "decrease": "Decrease {{label}}",
+    "increase": "Increase {{label}}"
+  },
+  "tabs": {
+    "today": "Today",
+    "read": "Read",
+    "plans": "Plans",
+    "profile": "Profile"
+  },
+  "demo": {
+    "badge": "Demo mode: data stays in this browser.",
+    "banner": "Demo mode. Your reading stays in this browser until the app is connected to its server.",
+    "signInNotice": "Demo mode: enter any email to try the app. Nothing is sent anywhere.",
+    "signUpNotice": "Demo mode: no password needed. Your data stays in this browser."
+  },
+  "auth": {
+    "signInTitle": "Sign in",
+    "email": "Email",
+    "password": "Password",
+    "name": "Your name",
+    "nameHint": "Shown to friends you connect with. You can change it later.",
+    "signIn": "Sign in",
+    "continueWithGoogle": "Continue with Google",
+    "createAccount": "Create an account",
+    "createAccountTitle": "Create your account",
+    "createAccountIntro": "Free, with no ads. Your notes and highlights stay private.",
+    "haveAccount": "I already have an account",
+    "forgotPassword": "Forgot password?",
+    "fillBoth": "Enter your email and password.",
+    "invalidEmail": "Enter a valid email address.",
+    "passwordTooShort_one": "Use at least {{count}} character.",
+    "passwordTooShort_other": "Use at least {{count}} characters.",
+    "passwordHint_one": "At least {{count}} character.",
+    "passwordHint_other": "At least {{count}} characters.",
+    "ageConfirm": "I am 13 or older",
+    "ageRequired": "You need to be 13 or older to create an account.",
+    "legalLine": "By creating an account you agree to the",
+    "checkEmailTitle": "Check your email",
+    "checkEmailBody": "We sent a link to {{email}}. Open it to confirm your account, then sign in.",
+    "backToSignIn": "Back to sign in",
+    "resetTitle": "Reset your password",
+    "resetIntro": "Enter your email and we’ll send you a link to choose a new password.",
+    "sendResetLink": "Send reset link",
+    "resetSent": "If an account exists for {{email}}, a reset link is on its way.",
+    "newPasswordTitle": "Choose a new password",
+    "newPassword": "New password",
+    "savePassword": "Save password",
+    "passwordChanged": "Your password is changed.",
+    "resetLinkExpired": "This reset link has expired or was already used. Ask for a new one."
+  },
+  "onboarding": {
+    "title": "Welcome",
+    "step": "Step {{step}} of {{total}}",
+    "nameTitle": "What should we call you?",
+    "nameBody": "Friends will see this name when you connect.",
+    "planTitle": "Pick a first reading plan",
+    "planBody": "A plan gives you one short reading a day. You can change or add plans any time.",
+    "skipPlan": "Skip for now",
+    "reminderTitle": "A daily reminder",
+    "reminderBody": "One gentle reminder at a time you choose, only on days you haven’t read yet.",
+    "finish": "Start reading"
+  },
+  "today": {
+    "greetingMorning": "Good morning",
+    "greetingAfternoon": "Good afternoon",
+    "greetingEvening": "Good evening",
+    "greetingMorningName": "Good morning, {{name}}",
+    "greetingAfternoonName": "Good afternoon, {{name}}",
+    "greetingEveningName": "Good evening, {{name}}",
+    "arcLabel_one": "{{count}} of the last 7 days read",
+    "arcLabel_other": "{{count}} of the last 7 days read",
+    "daysThisWeek_one": "day read in the last 7",
+    "daysThisWeek_other": "days read in the last 7",
+    "doneTitle": "Done for today",
+    "doneBody": "See you tomorrow.",
+    "streak_zero": "No streak yet",
+    "streak_one": "{{count}}-day streak",
+    "streak_other": "{{count}}-day streak",
+    "freezes_zero": "No streak freezes saved",
+    "freezes_one": "{{count}} streak freeze saved",
+    "freezes_other": "{{count}} streak freezes saved",
+    "readingTitle": "Today’s reading",
+    "noPlans": "Pick a reading plan and you’ll find your daily reading here.",
+    "browsePlans": "Browse plans",
+    "openBible": "Open the Bible",
+    "continueReading": "Continue {{place}}",
+    "startDay": "Start day {{day}}",
+    "planDoneToday": "Done today",
+    "readAhead": "Read the next day"
+  },
+  "plans": {
+    "title": "Plans",
+    "mine": "My plans",
+    "groupWhole": "Whole Bible",
+    "groupBooks": "Books",
+    "groupTopics": "Topics",
+    "length_one": "{{count}} day",
+    "length_other": "{{count}} days",
+    "day": "Day {{day}}",
+    "dayOf": "Day {{day}} of {{total}}",
+    "dayDone": "done",
+    "finished": "Finished",
+    "statusActive": "{{done}} of {{total}} days read",
+    "statusPaused": "Paused at {{done}} of {{total}} days",
+    "statusFinished": "Finished",
+    "progressLabel": "{{percent}}% read",
+    "start": "Start this plan",
+    "continueDay": "Continue with day {{day}}",
+    "pause": "Pause",
+    "resume": "Resume plan",
+    "restart": "Start over",
+    "readAgain": "Read it again",
+    "restartConfirm": "Start this plan over from day 1? Your streak and badges stay; only this plan’s progress is reset.",
+    "restartYes": "Start over",
+    "schedule": "Schedule",
+    "showAll_one": "Show all {{count}} day",
+    "showAll_other": "Show all {{count}} days",
+    "showFewer": "Show fewer days",
+    "notStarted": "Start this plan to mark days as read.",
+    "pausedNotice": "This plan is paused. Resume it to mark days as read.",
+    "dayAlreadyDone": "Day {{day}} is done.",
+    "nextDay": "Next day",
+    "reflectionLabel": "Your reflection (optional)",
+    "reflectionHint": "Only you can see this.",
+    "markRead": "Mark day {{day}} as read",
+    "dayDoneTitle": "Day {{day}} done",
+    "finishedTitle": "You finished the plan",
+    "streakNow_one": "Today counts. You’re on a {{count}}-day streak.",
+    "streakNow_other": "Today counts. You’re on a {{count}}-day streak.",
+    "alreadyCounted": "Today was already counted. Nice to keep going.",
+    "earnedFreeze": "You earned a streak freeze. It will cover a day you miss.",
+    "newBadge": "New badge: {{name}}",
+    "backToToday": "Back to Today",
+    "nextDayOf": "Day {{day}} of {{total}}"
+  },
+  "read": {
+    "title": "Read",
+    "continue": "Continue {{place}}",
+    "oldTestament": "Old Testament",
+    "newTestament": "New Testament",
+    "chaptersCount_one": "{{count}} chapter",
+    "chaptersCount_other": "{{count}} chapters",
+    "notFound": "That chapter doesn’t exist."
+  },
+  "reader": {
+    "chooseChapter": "{{place}}. Choose another chapter",
+    "verseLabel": "{{place}}. {{text}}",
+    "versesSelected_one": "{{count}} verse selected",
+    "versesSelected_other": "{{count}} verses selected",
+    "actions": "Verse actions",
+    "clearSelection": "Clear selection",
+    "highlightIn": "Highlight in {{color}}",
+    "removeHighlight": "Remove highlight",
+    "bookmarkVerse": "Bookmark verse",
+    "bookmarkChapter": "Bookmark chapter",
+    "removeChapterBookmark": "Remove chapter bookmark",
+    "addNote": "Note",
+    "copy": "Copy",
+    "copied": "Copied",
+    "colors": {
+      "yellow": "yellow",
+      "green": "green",
+      "blue": "blue",
+      "pink": "pink",
+      "purple": "purple"
+    },
+    "yourNotes": "Your notes",
+    "editNote": "Edit note on {{place}}",
+    "noteTitle": "Note on {{place}}",
+    "noteLabel": "Note",
+    "noteHint": "Private. Only you can see your notes.",
+    "markRead": "Mark chapter as read",
+    "countedToday_one": "Counted for today. {{count}}-day streak.",
+    "countedToday_other": "Counted for today. {{count}}-day streak.",
+    "chapterRecorded": "Chapter marked as read."
+  },
+  "reading": {
+    "title": "Reading settings",
+    "theme": "Theme",
+    "themeSystem": "Auto",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSepia": "Sepia",
+    "textSize": "Text size",
+    "sizeOption": "{{size}}",
+    "lineSpacing": "Line spacing",
+    "spacingCompact": "Compact",
+    "spacingNormal": "Normal",
+    "spacingRelaxed": "Relaxed",
+    "verseNumbers": "Show verse numbers",
+    "translation": "Translation"
+  },
+  "search": {
+    "title": "Search",
+    "label": "Reference or words",
+    "placeholder": "Search, or go to John 3:16",
+    "hint": "Type a reference like Psalm 23, or words like \"peace\". Use quotes for an exact phrase.",
+    "hintReferenceOnly": "Type a reference like Psalm 23 or John 3:16.",
+    "goTo": "Go to {{place}}",
+    "noResults": "No verses match “{{query}}”. Try fewer or different words.",
+    "resultCount_one": "{{count}} verse",
+    "resultCount_other": "{{count}} verses",
+    "manyResults": "Showing the first 50 verses. Add words to narrow it down.",
+    "demoUnavailable": "Searching by words needs the app’s server, which isn’t connected in demo mode. You can still go to a reference like John 3:16."
+  },
+  "profile": {
+    "noName": "Reader",
+    "currentStreak": "Current streak",
+    "longestStreak": "Longest streak",
+    "last7": "Days read this week",
+    "plansInProgress": "Plans in progress",
+    "badges": "Badges",
+    "badgeEarned": "Earned",
+    "badgeNotYet": "Not earned yet",
+    "saved": "Bookmarks and notes",
+    "settings": "Settings",
+    "visibility": {
+      "public": "Public profile",
+      "friends": "Visible to friends",
+      "private": "Private profile"
+    },
+    "visibilityShort": {
+      "public": "Public",
+      "friends": "Friends",
+      "private": "Private"
+    }
+  },
+  "badges": {
+    "first_reading": {
+      "name": "First reading",
+      "description": "Read on your first day"
+    },
+    "streak_7": {
+      "name": "One week",
+      "description": "Read 7 days in a row"
+    },
+    "streak_30": {
+      "name": "One month",
+      "description": "Read 30 days in a row"
+    },
+    "streak_100": {
+      "name": "100 days",
+      "description": "Read 100 days in a row"
+    },
+    "streak_365": {
+      "name": "A whole year",
+      "description": "Read 365 days in a row"
+    },
+    "first_plan": {
+      "name": "Plan finished",
+      "description": "Finish your first reading plan"
+    },
+    "plans_5": {
+      "name": "Five plans",
+      "description": "Finish five reading plans"
+    },
+    "first_book": {
+      "name": "A whole book",
+      "description": "Read every chapter of a book"
+    }
+  },
+  "saved": {
+    "privateNote": "Only you can see your bookmarks and notes.",
+    "bookmarks": "Bookmarks",
+    "notes": "Notes",
+    "noBookmarks": "Tap a verse in the reader and choose the bookmark to save it here.",
+    "noNotes": "Tap a verse in the reader and choose Note to write one."
+  },
+  "settings": {
+    "profile": "Profile",
+    "username": "Username",
+    "usernameRule": "3–24 characters: lowercase letters, numbers and _",
+    "bio": "Bio",
+    "bioHint_one": "Up to {{count}} character.",
+    "bioHint_other": "Up to {{count}} characters.",
+    "visibility": "Who can see your profile",
+    "visibilityHelp": {
+      "public": "Anyone signed in can see your name, streak and badges. Notes and highlights always stay private.",
+      "friends": "Only people you connect with can see your name, streak and badges. Notes and highlights always stay private.",
+      "private": "Nobody else can see your profile. Notes and highlights always stay private."
+    },
+    "saveProfile": "Save profile",
+    "profileSaved": "Saved",
+    "privacy": "Privacy and data",
+    "privacyIntro": "Your data is stored in Switzerland. Download a copy any time, or delete your account and everything in it.",
+    "exportData": "Download my data",
+    "signOut": "Sign out",
+    "deleteAccount": "Delete account",
+    "deleteConfirmTitle": "Delete your account?",
+    "deleteConfirmBody": "This permanently removes your profile, streak, plans, notes and highlights. It can’t be undone.",
+    "deleteForever": "Delete permanently",
+    "about": "About",
+    "freeForever": "Free, with no ads, and your data is never sold."
+  },
+  "reminders": {
+    "title": "Reminders",
+    "daily": "Daily reading reminder",
+    "dailyHint": "Sent only on days you haven’t read yet.",
+    "time": "Reminder time",
+    "enablePush": "Allow notifications on this device",
+    "pushOn": "Notifications are on for this device.",
+    "pushDeclined": "Notifications weren’t allowed. You can change this in your browser’s site settings.",
+    "pushError": "Notifications couldn’t be turned on. Try again later.",
+    "push_unsupported": "This browser can’t show notifications. Reminders will reach your other devices.",
+    "push_not_configured": "Notifications aren’t set up for this app yet.",
+    "push_denied": "Notifications are blocked for this site. Allow them in your browser’s site settings.",
+    "push_demo": "Reminders aren’t sent in demo mode.",
+    "quietStart": "Quiet hours start",
+    "quietEnd": "Quiet hours end",
+    "off": "Off",
+    "dailyCap": "Most notifications a day",
+    "socialIntro": "Notifications from friends and groups (coming with the social features):",
+    "socialComments": "Comments on your reflections",
+    "socialReactions": "Reactions",
+    "socialNudges": "Nudges from friends",
+    "socialGroups": "Group activity"
+  },
+  "legal": {
+    "privacyTitle": "Privacy policy",
+    "termsTitle": "Terms of use",
+    "draftNotice": "Draft. This text will be reviewed before the app opens to the public.",
+    "privacySections": [
+      {
+        "title": "What we store",
+        "body": "Your email address (for signing in), your profile, the days you read, your reading plans and progress, and your highlights, bookmarks and notes. Notes, highlights and reflections are private: only you can see them."
+      },
+      {
+        "title": "Where it is stored",
+        "body": "On Supabase servers in Zurich, Switzerland. The Bible text is served from our website host."
+      },
+      {
+        "title": "What we never do",
+        "body": "We show no ads, sell no data and use no tracking for advertising."
+      },
+      {
+        "title": "Notifications",
+        "body": "If you allow notifications, your browser gives us an address to send reminders to. You can turn reminders off or remove permission at any time."
+      },
+      {
+        "title": "Your rights",
+        "body": "In Settings you can download all your data or delete your account permanently. Deleting your account removes everything linked to it."
+      },
+      {
+        "title": "Contact",
+        "body": "Questions about privacy: the contact address will be added here before launch."
+      }
+    ],
+    "termsSections": [
+      {
+        "title": "Free to use",
+        "body": "The app is free. There are no ads and no paid features."
+      },
+      {
+        "title": "Who can use it",
+        "body": "You need to be 13 or older to create an account."
+      },
+      {
+        "title": "Bible text",
+        "body": "The Berean Standard Bible and the World English Bible are in the public domain."
+      },
+      {
+        "title": "Being kind",
+        "body": "When social features arrive, community guidelines will apply to everything you post. Content that breaks them can be removed."
+      },
+      {
+        "title": "Changes",
+        "body": "If these terms change, we’ll tell you in the app before the change takes effect."
+      }
+    ]
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "This page doesn’t exist. It may have moved.",
+    "home": "Go to Today"
+  },
+  "errors": {
+    "unknown": "Something went wrong. Try again in a moment.",
+    "network": "Couldn’t reach the server. Check your connection and try again.",
+    "not_authenticated": "Your session ended. Sign in again.",
+    "invalid_credentials": "That email and password don’t match. Check them and try again.",
+    "email_not_confirmed": "Confirm your email first: open the link we sent you.",
+    "user_already_exists": "An account with this email already exists. Sign in instead.",
+    "weak_password": "Choose a longer password, with letters and numbers.",
+    "same_password": "Choose a password different from your current one.",
+    "over_email_send_rate_limit": "Too many emails sent. Wait a few minutes and try again.",
+    "demo_unavailable": "This isn’t available in demo mode.",
+    "day_already_completed": "This day is already marked as read.",
+    "plan_paused": "This plan is paused. Resume it to continue.",
+    "plan_finished": "This plan is finished. Start it over to read it again.",
+    "day_out_of_range": "This day isn’t part of the plan.",
+    "reflection_too_long": "Reflections can be up to 2,000 characters.",
+    "note_length": "Notes need between 1 and 5,000 characters.",
+    "invalid_chapter": "That chapter doesn’t exist.",
+    "invalid_timezone": "That timezone isn’t recognised.",
+    "invalid_transition": "That change isn’t possible right now.",
+    "plan_not_found": "That plan doesn’t exist.",
+    "enrolment_not_found": "You haven’t started this plan.",
+    "invalid_username": "Usernames use 3–24 lowercase letters, numbers or _.",
+    "username_taken": "That username is taken. Try another."
+  },
+  "books": {
+    "GEN": "Genesis",
+    "EXO": "Exodus",
+    "LEV": "Leviticus",
+    "NUM": "Numbers",
+    "DEU": "Deuteronomy",
+    "JOS": "Joshua",
+    "JDG": "Judges",
+    "RUT": "Ruth",
+    "1SA": "1 Samuel",
+    "2SA": "2 Samuel",
+    "1KI": "1 Kings",
+    "2KI": "2 Kings",
+    "1CH": "1 Chronicles",
+    "2CH": "2 Chronicles",
+    "EZR": "Ezra",
+    "NEH": "Nehemiah",
+    "EST": "Esther",
+    "JOB": "Job",
+    "PSA": "Psalms",
+    "PRO": "Proverbs",
+    "ECC": "Ecclesiastes",
+    "SNG": "Song of Songs",
+    "ISA": "Isaiah",
+    "JER": "Jeremiah",
+    "LAM": "Lamentations",
+    "EZK": "Ezekiel",
+    "DAN": "Daniel",
+    "HOS": "Hosea",
+    "JOL": "Joel",
+    "AMO": "Amos",
+    "OBA": "Obadiah",
+    "JON": "Jonah",
+    "MIC": "Micah",
+    "NAM": "Nahum",
+    "HAB": "Habakkuk",
+    "ZEP": "Zephaniah",
+    "HAG": "Haggai",
+    "ZEC": "Zechariah",
+    "MAL": "Malachi",
+    "MAT": "Matthew",
+    "MRK": "Mark",
+    "LUK": "Luke",
+    "JHN": "John",
+    "ACT": "Acts",
+    "ROM": "Romans",
+    "1CO": "1 Corinthians",
+    "2CO": "2 Corinthians",
+    "GAL": "Galatians",
+    "EPH": "Ephesians",
+    "PHP": "Philippians",
+    "COL": "Colossians",
+    "1TH": "1 Thessalonians",
+    "2TH": "2 Thessalonians",
+    "1TI": "1 Timothy",
+    "2TI": "2 Timothy",
+    "TIT": "Titus",
+    "PHM": "Philemon",
+    "HEB": "Hebrews",
+    "JAS": "James",
+    "1PE": "1 Peter",
+    "2PE": "2 Peter",
+    "1JN": "1 John",
+    "2JN": "2 John",
+    "3JN": "3 John",
+    "JUD": "Jude",
+    "REV": "Revelation"
+  },
+  "bookSingular": {
+    "PSA": "Psalm"
+  }
+}
