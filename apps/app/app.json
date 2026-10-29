@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Daybread",
-    "slug": "daybread",
-    "scheme": "daybread",
+    "name": "DailyBread",
+    "slug": "dailybread",
+    "scheme": "dailybread",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -23,8 +23,8 @@
       "output": "single",
       "bundler": "metro",
       "favicon": "./assets/favicon.png",
-      "name": "Daybread",
-      "shortName": "Daybread",
+      "name": "DailyBread",
+      "shortName": "DailyBread",
       "themeColor": "#2E5E8C",
       "backgroundColor": "#F5F7F9",
       "lang": "en"

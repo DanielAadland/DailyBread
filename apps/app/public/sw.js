@@ -4,10 +4,10 @@ self.addEventListener('push', (event) => {
   try {
     data = event.data ? event.data.json() : {};
   } catch {
-    data = { title: 'Daybread', body: event.data ? event.data.text() : '' };
+    data = { title: 'DailyBread', body: event.data ? event.data.text() : '' };
   }
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Daybread', {
+    self.registration.showNotification(data.title || 'DailyBread', {
       body: data.body || '',
       icon: '/favicon.ico',
       badge: '/favicon.ico',

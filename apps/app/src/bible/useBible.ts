@@ -95,7 +95,7 @@ export function previousChapter(book: BookId, chapter: number): { book: BookId; 
   return prev ? { book: prev.id, chapter: prev.chapters } : null;
 }
 
-const LAST_READ_KEY = 'daybread.last-read';
+const LAST_READ_KEY = 'dailybread.last-read';
 
 /** Where the reader was last open, to continue from the Read tab. */
 export function useLastRead() {

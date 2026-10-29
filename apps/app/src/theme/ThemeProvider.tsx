@@ -5,7 +5,7 @@ import { useBackend } from '../api/BackendProvider';
 import { useProfile, useUpdateProfile } from '../api/hooks';
 import { DEFAULT_READING_PREFS, PALETTES, type Palette, type ReadingPrefs, type ThemeName } from './tokens';
 
-const STORAGE_KEY = 'daybread.reading-prefs';
+const STORAGE_KEY = 'dailybread.reading-prefs';
 
 interface ThemeContextValue {
   name: ThemeName;

@@ -3,7 +3,7 @@
 A free, social Bible-reading app that makes reading Scripture a daily habit. No ads, no selling data,
 no endless feed. The goal is more days per week with the Bible, not more minutes in an app.
 
-Website first, then desktop (Tauri) and mobile (Expo). Working name in the app: **Daybread** (one translation key, easy to change).
+Website first, then desktop (Tauri) and mobile (Expo).
 
 ## Status: Phase 1 (web MVP)
 

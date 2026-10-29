@@ -32,7 +32,7 @@ import {
   type Session,
 } from './types';
 
-const KEY = 'daybread.demo.v1';
+const KEY = 'dailybread.demo.v1';
 
 interface DemoEnrolment {
   id: string;
