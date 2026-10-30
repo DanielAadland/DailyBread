@@ -87,6 +87,29 @@ jobs:
             echo "::error title=CLOUDFLARE_API_TOKEN looks wrong::A Cloudflare API token is one word of letters, digits, '-' and '_' (usually 40 characters), shown once when you create it under My Profile → API Tokens → Create Token (template 'Edit Cloudflare Workers', or a custom token with Account → Cloudflare Pages → Edit). The secret has ${#token} characters; other symbols in it: '${others}'."
             exit 1
           fi
+          # Values that have the right shape but are something else.
+          if printf '%s' "$token" | grep -Eq '^[0-9a-f]{37}$'; then
+            echo "::error title=CLOUDFLARE_API_TOKEN looks like the Global API Key::That key doesn't work here. Create an API token instead: My Profile → API Tokens → Create Token → 'Edit Cloudflare Workers'."
+            exit 1
+          fi
+          if printf '%s' "$token" | grep -Eq '^[0-9a-f]{32}$'; then
+            echo "::error title=CLOUDFLARE_API_TOKEN looks like an ID::32 hexadecimal characters is the shape of a token ID or account ID, not the token itself. The token value is shown only once, right after you create it."
+            exit 1
+          fi
+          # Ask Cloudflare whether the token is valid (user tokens and account tokens verify at different addresses).
+          verify() { curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $token" "$1"; }
+          user_status=$(verify https://api.cloudflare.com/client/v4/user/tokens/verify)
+          account_status=$(verify "https://api.cloudflare.com/client/v4/accounts/$id/tokens/verify")
+          if [ "$user_status" != "200" ] && [ "$account_status" != "200" ]; then
+            echo "::error title=Cloudflare rejected CLOUDFLARE_API_TOKEN::Cloudflare answered ${user_status} (user token) / ${account_status} (account token). The token may have been deleted, expired, limited to other IP addresses, or copied incompletely. Create a new one (My Profile → API Tokens → Create Token → 'Edit Cloudflare Workers', account: yours) and paste the whole value into the secret."
+            exit 1
+          fi
+          # The token must be allowed to use Pages in this account.
+          pages_status=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $token" "https://api.cloudflare.com/client/v4/accounts/$id/pages/projects")
+          if [ "$pages_status" != "200" ]; then
+            echo "::error title=CLOUDFLARE_API_TOKEN can't use Cloudflare Pages::The token is valid, but listing Pages projects in this account answered ${pages_status}. Give it the permission Account → Cloudflare Pages → Edit, for the account whose ID is in CLOUDFLARE_ACCOUNT_ID."
+            exit 1
+          fi
       # Wrangler's own messages are turned into annotations, so failures are readable from the run summary.
       - name: Create the Pages project (first deploy only)
         env:
