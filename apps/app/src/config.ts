@@ -11,7 +11,7 @@ const env = {
   /** Show "Continue with Google" only once the Google provider is set up in Supabase. */
   googleSignIn: process.env.EXPO_PUBLIC_ENABLE_GOOGLE === 'true',
   /** The public website, for links shared from the native apps (invite links). */
-  siteUrl: (process.env.EXPO_PUBLIC_SITE_URL ?? 'https://dailybread.pages.dev').replace(/\/$/, ''),
+  siteUrl: (process.env.EXPO_PUBLIC_SITE_URL ?? 'https://dailybread-7q3.pages.dev').replace(/\/$/, ''),
 };
 
 export const config = {

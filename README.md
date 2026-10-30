@@ -21,6 +21,12 @@ Website first, then desktop (Tauri) and mobile (Expo).
 | Verse cards | A daily set of full-screen cards (a verse, a background, a short reflection) that ends with "You're done for today"; friends' cards at the front; a card creator (12 backgrounds, 3 lettering styles) to post a card or save/share it as an image |
 | Coming next | Phase 5: desktop app (Windows, macOS, Linux) |
 
+## Live website
+
+**https://dailybread-7q3.pages.dev** (Cloudflare Pages). The plain `dailybread.pages.dev` address belongs to someone
+else's site, so Cloudflare added the `-7q3` suffix. Every deploy prints the address in the Deploy run summary.
+A custom domain can be added later in Cloudflare → Pages → dailybread → Custom domains.
+
 ## Try it locally
 
 ```sh
@@ -65,7 +71,7 @@ Repository secrets (Settings → Secrets and variables → Actions):
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare dashboard, right column |
 
 Once, in the Supabase dashboard: Authentication → URL Configuration → set the Site URL to
-`https://dailybread.pages.dev` and add `https://dailybread.pages.dev/reset-password` as a redirect URL.
+`https://dailybread-7q3.pages.dev` and add `https://dailybread-7q3.pages.dev/reset-password` as a redirect URL.
 Reminders and Google sign-in need a few more steps, listed in [supabase/README.md](supabase/README.md).
 
 ## Project layout
