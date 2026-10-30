@@ -79,6 +79,7 @@ function RootNavigator() {
         <Stack.Screen name="reset-password" />
         <Stack.Screen name="legal/[page]" />
         <Stack.Screen name="join/[code]" />
+        <Stack.Screen name="cards" />
       </Stack>
     </>
   );

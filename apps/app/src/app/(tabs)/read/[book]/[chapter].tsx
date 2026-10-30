@@ -140,6 +140,15 @@ function Reader({ book, chapter, focusVerse }: { book: BookId; chapter: number; 
     router.push(`/feed/compose?type=verse&passage=${encodeURIComponent(passage)}`);
   };
 
+  /** Make a verse card from the selection (first to last verse). */
+  const makeCard = () => {
+    const first = sorted[0];
+    const last = sorted[sorted.length - 1];
+    if (first === undefined || last === undefined) return;
+    const passage = toKey({ book, startChapter: chapter, startVerse: first, endChapter: chapter, endVerse: last });
+    router.push(`/cards/new?passage=${encodeURIComponent(passage)}`);
+  };
+
   const openNote = () => {
     const first = sorted[0];
     if (first === undefined) return;
@@ -183,6 +192,7 @@ function Reader({ book, chapter, focusVerse }: { book: BookId; chapter: number; 
             <IconButton icon="create-outline" label={t('reader.addNote')} onPress={openNote} />
             <IconButton icon="copy-outline" label={t('reader.copy')} onPress={copy} />
             <IconButton icon="share-social-outline" label={t('reader.share')} onPress={share} />
+            <IconButton icon="image-outline" label={t('reader.makeCard')} onPress={makeCard} />
           </View>
         </View>
       </View>

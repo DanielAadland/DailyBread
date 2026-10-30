@@ -13,6 +13,8 @@ import { FONTS, SPACE } from '../../theme/tokens';
 import { Button } from '../../ui/Button';
 import { DawnArc } from '../../ui/DawnArc';
 import { GroupCard } from '../../ui/GroupCard';
+import { CardArtSvg } from '../../cards/CardArtSvg';
+import { useCardProgress, useDailyCards, useToday as useCardsToday } from '../../cards/useDailyCards';
 import { Divider, ErrorState, Loading, Notice, ProgressBar, Section } from '../../ui/misc';
 import { Screen } from '../../ui/Screen';
 import { Txt } from '../../ui/Text';
@@ -121,8 +123,47 @@ export default function TodayScreen() {
         )}
       </Section>
 
+      <TodayCards />
       <TodayGroups />
     </Screen>
+  );
+}
+
+/** Today's verse cards: a small set, then done. */
+function TodayCards() {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  const today = useCardsToday();
+  const { cards } = useDailyCards();
+  const { seen } = useCardProgress(today);
+  const total = cards.length;
+  if (total === 0) return null;
+  const done = seen >= total;
+  const first = cards[Math.min(seen, total - 1)]!;
+
+  return (
+    <Section title={t('cards.title')}>
+      <View style={styles.cardsRow}>
+        <View style={styles.cardThumb} importantForAccessibility="no-hide-descendants">
+          <CardArtSvg background={first.style.background} />
+        </View>
+        <View style={{ flex: 1, gap: SPACE.xs }}>
+          <Txt variant="label">{done ? t('cards.doneShort') : seen > 0 ? t('cards.seenOf', { seen, total }) : t('cards.forToday', { count: total })}</Txt>
+          <Txt variant="small" tone="mist">
+            {done ? t('cards.comeBack') : t('cards.tileHint')}
+          </Txt>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SPACE.sm, marginTop: SPACE.xs }}>
+            <Button
+              label={done ? t('cards.seeAgain') : seen > 0 ? t('cards.continue') : t('cards.open')}
+              icon={done ? undefined : 'albums-outline'}
+              variant={done ? 'quiet' : 'secondary'}
+              href="/cards"
+            />
+            {done ? <Ionicons name="checkmark-circle" size={22} color={colors.dawn} accessibilityLabel={t('cards.doneShort')} /> : null}
+          </View>
+        </View>
+      </View>
+    </Section>
   );
 }
 
@@ -182,6 +223,8 @@ function PlanToday({ plan, primary, onOpen }: { plan: TodayPlan; primary: boolea
 }
 
 const styles = StyleSheet.create({
+  cardsRow: { flexDirection: 'row', gap: SPACE.md, alignItems: 'center' },
+  cardThumb: { width: 72, height: 90, borderRadius: 10, overflow: 'hidden' },
   hero: { gap: SPACE.md, paddingVertical: SPACE.sm },
   heroText: { gap: SPACE.xs, alignItems: 'center' },
   stats: { flexDirection: 'row', justifyContent: 'center', gap: SPACE.lg, flexWrap: 'wrap' },

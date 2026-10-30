@@ -194,7 +194,8 @@
     "countedToday_one": "Counted for today. {{count}}-day streak.",
     "countedToday_other": "Counted for today. {{count}}-day streak.",
     "chapterRecorded": "Chapter marked as read.",
-    "share": "Share as a post"
+    "share": "Share as a post",
+    "makeCard": "Make a verse card"
   },
   "reading": {
     "title": "Reading settings",
@@ -490,7 +491,8 @@
     "member_not_found": "This person isn't in the group any more.",
     "already_read": "They've already read today.",
     "too_many_pinned": "A group can have 3 pinned posts. Unpin one first.",
-    "not_allowed": "Only group admins can do that."
+    "not_allowed": "Only group admins can do that.",
+    "invalid_card": "That card style isn’t available."
   },
   "books": {
     "GEN": "Genesis",
@@ -619,7 +621,8 @@
       "verse": "Verses",
       "reflection": "Reflection",
       "prayer": "Prayer request",
-      "milestone": "Milestone"
+      "milestone": "Milestone",
+      "card": "Verse card"
     },
     "reactions": {
       "amen": "Amen",
@@ -935,5 +938,62 @@
         "description_content_blocked": "Please rephrase the description: it contains words that aren't allowed here."
       }
     }
+  },
+  "cards": {
+    "title": "Verse cards",
+    "loading": "Getting today’s cards ready",
+    "forToday_one": "{{count}} card for today",
+    "forToday_other": "{{count}} cards for today",
+    "seenOf": "{{seen}} of {{total}} seen",
+    "tileHint": "A verse and a thought, a few minutes at most.",
+    "open": "Open today’s cards",
+    "continue": "Continue",
+    "doneShort": "Done for today",
+    "comeBack": "New cards tomorrow morning.",
+    "seeAgain": "See today’s cards again",
+    "progress": "Card {{current}} of {{total}}",
+    "cardLabel": "Verse card, {{reference}}",
+    "fromFriend": "From {{name}}, {{when}}",
+    "makeYourOwn": "Make your own",
+    "saveImage": "Save image",
+    "shareImage": "Share image",
+    "readInContext": "Read in context",
+    "next": "Next card",
+    "swipeHint": "Swipe up for the next card",
+    "finish": "Finish",
+    "doneTitle": "You’re done for today",
+    "doneBody": "That’s today’s set. New cards are ready tomorrow morning, and your reading plan is always there in between.",
+    "backToToday": "Back to Today",
+    "newTitle": "Make a verse card",
+    "previewEmpty": "Type a reference below, like Psalm 23:1 or John 1:5.",
+    "passage": "Verse or verses",
+    "passageHint": "For example: Psalm 23:1 or Philippians 4:6–7",
+    "passageFound": "Found: {{place}}",
+    "tooLong_one": "That passage is long for a card. Choose up to about {{count}} word.",
+    "tooLong_other": "That passage is long for a card. Choose up to about {{count}} words.",
+    "background": "Background",
+    "backgrounds": {
+      "dawn": "Dawn",
+      "tide": "Tide",
+      "olive": "Olive hills",
+      "sand": "Sand",
+      "dusk": "Dusk",
+      "night": "Night sky",
+      "meadow": "Meadow",
+      "rose": "Rose",
+      "stone": "Mountains",
+      "sea": "Sea",
+      "ember": "Ember",
+      "mist": "Mist"
+    },
+    "font": "Lettering",
+    "fonts": {
+      "serif": "Book",
+      "serif_italic": "Italic",
+      "sans": "Modern"
+    },
+    "words": "Your words (optional)",
+    "wordsHint": "Shown with the card when you post it, not on the image.",
+    "post": "Post card"
   }
 }

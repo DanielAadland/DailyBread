@@ -11,6 +11,7 @@ import { language } from '../i18n';
 import { relativeTime } from '../lib/time';
 import { useTheme } from '../theme/ThemeProvider';
 import { FONTS, RADIUS, SPACE } from '../theme/tokens';
+import { VerseCard } from '../cards/VerseCard';
 import { ActionSheet, type SheetAction } from './ActionSheet';
 import { Avatar } from './Avatar';
 import { Button, IconButton } from './Button';
@@ -78,7 +79,7 @@ export function PostCard({ post, detailed = false, inGroup = false }: { post: Po
   const actions = [...moderation, ...own];
 
   return (
-    <View style={styles.card} role="article" aria-label={t('post.label', { name, type: t(`post.types.${post.type}`) })}>
+    <View style={styles.card} role="article" aria-label={t('post.label', { name, type: post.card ? t('post.types.card') : t(`post.types.${post.type}`) })}>
       <View style={styles.head}>
         <Pressable onPress={openAuthor} accessibilityRole="link" accessibilityLabel={t('post.openProfile', { name })} style={styles.author}>
           <Avatar person={post.author} />
@@ -87,7 +88,7 @@ export function PostCard({ post, detailed = false, inGroup = false }: { post: Po
               {name}
             </Txt>
             <Txt variant="small" tone="mist" numberOfLines={1}>
-              {`${post.groupDay !== null ? t('post.dayReply', { day: post.groupDay }) : t(`post.types.${post.type}`)}, ${relativeTime(post.createdAt, language)}`}
+              {`${post.groupDay !== null ? t('post.dayReply', { day: post.groupDay }) : post.card ? t('post.types.card') : t(`post.types.${post.type}`)}, ${relativeTime(post.createdAt, language)}`}
             </Txt>
           </View>
         </Pressable>
@@ -122,7 +123,15 @@ export function PostCard({ post, detailed = false, inGroup = false }: { post: Po
       {post.hidden ? <Txt variant="small" tone="mist">{t('post.hiddenNote')}</Txt> : null}
 
       <Pressable onPress={detailed ? undefined : openPost} disabled={detailed} accessibilityRole={detailed ? undefined : 'link'} accessibilityLabel={detailed ? undefined : t('post.open')}>
-        {post.type === 'verse' ? (
+        {post.card && post.verseText ? (
+          <View style={styles.cardTile}>
+            <VerseCard
+              style={post.card}
+              text={post.verseText}
+              reference={`${reference ?? ''}${post.translation ? ` ${TRANSLATIONS[post.translation].abbreviation}` : ''}`}
+            />
+          </View>
+        ) : post.type === 'verse' ? (
           <View style={[styles.verse, { borderLeftColor: colors.dawn }]}>
             <Txt style={{ fontFamily: FONTS.scripture, fontSize: 19, lineHeight: 30 }}>{post.verseText}</Txt>
             <Txt variant="small" tone="mist">
@@ -226,6 +235,7 @@ const styles = StyleSheet.create({
   card: { gap: SPACE.sm + 4, paddingVertical: SPACE.md },
   head: { flexDirection: 'row', alignItems: 'center', gap: SPACE.sm },
   author: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: SPACE.sm + 4, borderRadius: RADIUS.control },
+  cardTile: { width: '100%', maxWidth: 380 },
   verse: { borderLeftWidth: 3, paddingLeft: SPACE.md, gap: SPACE.xs },
   milestone: { flexDirection: 'row', alignItems: 'center', gap: SPACE.sm },
   footer: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
