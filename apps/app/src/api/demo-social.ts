@@ -2,7 +2,18 @@
  * Social features for demo mode. Three sample friends with a few posts make the feed, follows,
  * reactions and comments explorable without a server. The rules come from @bible-app/core.
  */
-import { canInGroup, canSee, checkContent, followOutcome, SOCIAL_LIMITS, withinRateLimit, type BadgeCode } from '@bible-app/core';
+import {
+  canInGroup,
+  canSee,
+  CARD_LIMITS,
+  checkContent,
+  followOutcome,
+  isCardStyle,
+  SOCIAL_LIMITS,
+  withinRateLimit,
+  type BadgeCode,
+  type CardStyle,
+} from '@bible-app/core';
 import { fromKey, isValidRange } from '@bible-app/bible';
 import { roleIn, type GroupsState } from './demo-groups';
 import {
@@ -46,6 +57,7 @@ export interface DemoPost {
   groupId?: string | null;
   groupDay?: number | null;
   pinnedAt?: string | null;
+  card?: CardStyle | null;
 }
 
 export interface SocialState extends Partial<GroupsState> {
@@ -77,6 +89,7 @@ export function seedSocial(meId: string, now = new Date()): SocialState {
       { id: 'demo-p1', authorId: SAM, type: 'verse', passage: 'PSA.46.10', translation: 'bsb', verseText: '“Be still and know that I am God; I will be exalted among the nations, I will be exalted over the earth.”', body: 'Needed this today.', milestone: null, hidden: false, createdAt: ago(2) },
       { id: 'demo-p2', authorId: MARIA, type: 'reflection', passage: 'LAM.3.22-LAM.3.23', translation: 'bsb', verseText: null, body: 'New every morning. Holding on to that this week.', milestone: null, hidden: false, createdAt: ago(5) },
       { id: 'demo-p3', authorId: JO, type: 'prayer', passage: null, translation: null, verseText: null, body: 'Job interview on Thursday. I’d be grateful for your prayers.', milestone: null, hidden: false, createdAt: ago(26) },
+      { id: 'demo-p5', authorId: SAM, type: 'verse', passage: 'ISA.40.31', translation: 'bsb', verseText: 'But those who wait upon the LORD will renew their strength; they will mount up with wings like eagles; they will run and not grow weary, they will walk and not faint.', body: 'Made this one for anyone running on empty this week.', milestone: null, hidden: false, createdAt: ago(9), card: { background: 'sea', font: 'serif_italic' } },
       { id: 'demo-p4', authorId: SAM, type: 'milestone', passage: null, translation: null, verseText: null, body: '', milestone: { kind: 'badge', code: 'streak_7' }, hidden: false, createdAt: ago(72) },
     ],
     comments: [{ id: 'demo-c1', postId: 'demo-p1', authorId: JO, body: 'Amen. Thank you for sharing.', createdAt: ago(1) }],
@@ -112,6 +125,7 @@ type SocialApi = Pick<
   Backend,
   | 'getFeed'
   | 'getUserPosts'
+  | 'getCardPosts'
   | 'getPost'
   | 'createPost'
   | 'deletePost'
@@ -169,7 +183,7 @@ export const visiblePost = (s: SocialState, me: Profile, id: string) => {
 };
 export const toPost = (s: SocialState, me: Profile, p: DemoPost): Post => {
   const count = (k: ReactionKind) => s.reactions.filter((r) => r.postId === p.id && r.kind === k).length;
-  const { groupId, groupDay, pinnedAt, ...rest } = p;
+  const { groupId, groupDay, pinnedAt, card, ...rest } = p;
   const group = groupId ? s.groups?.find((g) => g.id === groupId) : undefined;
   const myRole = roleIn(s, groupId, me.id);
   return {
@@ -177,6 +191,7 @@ export const toPost = (s: SocialState, me: Profile, p: DemoPost): Post => {
     group: group ? { id: group.id, name: group.name } : null,
     groupDay: groupDay ?? null,
     pinned: !!pinnedAt,
+    card: card ?? null,
     canModerate: canInGroup(myRole, 'remove_content'),
     isMine: p.authorId === me.id,
     author: personOf(s, me, p.authorId),
@@ -220,6 +235,24 @@ export function createDemoSocial(ctx: Context): SocialApi {
       return page(s, me, s.posts.filter((p) => p.authorId === userId && !p.groupId && (!p.hidden || p.authorId === me.id)), before);
     },
 
+    async getCardPosts() {
+      const { me, social: s } = await ctx.current();
+      const since = new Date(Date.now() - CARD_LIMITS.friendWindowHours * 3_600_000).toISOString();
+      return s.posts
+        .filter(
+          (p) =>
+            p.card &&
+            !p.hidden &&
+            p.authorId !== me.id &&
+            p.createdAt > since &&
+            !s.mutes.some((m) => m.muterId === me.id && m.mutedId === p.authorId) &&
+            (p.groupId ? !!roleIn(s, p.groupId, me.id) && seesIn(s, me, p, p.authorId) : followState(s, me.id, p.authorId) === 'accepted' && sees(s, me, p.authorId)),
+        )
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        .slice(0, CARD_LIMITS.dailyFromFriends)
+        .map((p) => toPost(s, me, p));
+    },
+
     async getPost(id) {
       const { me, social: s } = await ctx.current();
       return toPost(s, me, visiblePost(s, me, id));
@@ -239,6 +272,7 @@ export function createDemoSocial(ctx: Context): SocialApi {
         if (input.type !== 'reflection' || !reading) throw new AppError('invalid_post');
         passage = reading;
       }
+      if (input.card && (input.type !== 'verse' || groupDay !== null || !isCardStyle(input.card))) throw new AppError('invalid_card');
       contentError(checkContent(input.body, { maxLength: SOCIAL_LIMITS.postMax, allowEmpty: input.type === 'verse' }));
       if (input.type !== 'prayer') {
         const range = passage ? fromKey(passage) : null;
@@ -281,6 +315,7 @@ export function createDemoSocial(ctx: Context): SocialApi {
         groupId,
         groupDay,
         pinnedAt: null,
+        card: input.card ?? null,
       };
       s.posts.push(post);
       await ctx.save();

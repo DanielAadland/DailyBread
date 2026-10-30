@@ -32,6 +32,7 @@ export const keys = {
   saved: ['saved'] as const,
   search: (translation: string, query: string) => ['search', translation, query] as const,
   feed: ['feed'] as const,
+  cardPosts: ['card-posts'] as const,
   userPosts: (userId: string) => ['user-posts', userId] as const,
   post: (id: string) => ['post', id] as const,
   comments: (postId: string) => ['comments', postId] as const,
@@ -245,6 +246,12 @@ export function useUserPosts(userId: string | undefined) {
   });
 }
 
+/** Friends' recent verse cards for the front of today's set. */
+export function useCardPosts() {
+  const { backend, session } = useBackend();
+  return useQuery({ queryKey: keys.cardPosts, queryFn: () => backend.getCardPosts(), enabled: !!session });
+}
+
 export function usePost(id: string) {
   const { backend, session } = useBackend();
   return useQuery({ queryKey: keys.post(id), queryFn: () => backend.getPost(id), enabled: !!session });
@@ -294,7 +301,7 @@ function replacePost(qc: QueryClient, post: Post) {
 
 const afterPostsChanged = (qc: QueryClient) =>
   Promise.all(
-    [keys.feed, ['user-posts'], ['group-posts'], ['group-day']].map((queryKey) => qc.invalidateQueries({ queryKey })),
+    [keys.feed, ['user-posts'], ['group-posts'], ['group-day'], keys.cardPosts].map((queryKey) => qc.invalidateQueries({ queryKey })),
   );
 
 export function useCreatePost() {

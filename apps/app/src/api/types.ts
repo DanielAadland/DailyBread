@@ -1,5 +1,6 @@
 import type {
   BadgeCode,
+  CardStyle,
   GroupAccess,
   GroupKind,
   GroupPlanStatus,
@@ -8,7 +9,7 @@ import type {
   MemberToday,
   Visibility as CoreVisibility,
 } from '@bible-app/core';
-export type { GroupAccess, GroupKind, GroupPlanStatus, GroupRole, MemberToday };
+export type { CardStyle, GroupAccess, GroupKind, GroupPlanStatus, GroupRole, MemberToday };
 import type { BookId, SearchHit, TranslationId } from '@bible-app/bible';
 import type { ReadingPrefs } from '../theme/tokens';
 
@@ -188,6 +189,8 @@ export interface Post {
   /** Set for replies in a group plan day's thread. */
   groupDay: number | null;
   pinned: boolean;
+  /** Set for verse cards: how the verse is drawn. */
+  card: CardStyle | null;
   /** The viewer is an admin of the post's group (may pin and remove). */
   canModerate: boolean;
 }
@@ -199,6 +202,8 @@ export interface NewPost {
   translation?: TranslationId;
   verseText?: string;
   groupId?: string;
+  /** Makes a verse post a verse card. */
+  card?: CardStyle;
   /** A reply in the group plan's thread for this day (type 'reflection'; the passage is the day's reading). */
   groupDay?: number;
 }
@@ -373,6 +378,8 @@ export interface Backend {
   // Social
   getFeed(before?: string): Promise<FeedPage>;
   getUserPosts(userId: string, before?: string): Promise<FeedPage>;
+  /** Recent verse cards from people I follow and my groups, for the front of today's set. */
+  getCardPosts(): Promise<Post[]>;
   getPost(id: string): Promise<Post>;
   createPost(input: NewPost): Promise<Post>;
   deletePost(id: string): Promise<void>;

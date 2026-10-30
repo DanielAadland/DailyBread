@@ -9,6 +9,7 @@ import {
   type Backend,
   type Comment,
   type FeedPage,
+  type CardStyle,
   type FollowState,
   type Group,
   type GroupAccess,
@@ -89,6 +90,7 @@ const KNOWN_ERRORS = [
   'member_not_found',
   'already_read',
   'too_many_pinned',
+  'invalid_card',
   // Last: other codes contain it (links_not_allowed).
   'not_allowed',
 ];
@@ -212,6 +214,7 @@ function mapPost(r: Row): Post {
     group: r.group ? { id: (r.group as Row).id as string, name: (r.group as Row).name as string } : null,
     groupDay: r.group_day == null ? null : Number(r.group_day),
     pinned: Boolean(r.pinned),
+    card: (r.card as CardStyle | null) ?? null,
     canModerate: Boolean(r.can_moderate),
   };
 }
@@ -551,6 +554,10 @@ export function createSupabaseBackend(url: string, anonKey: string): Backend {
       return mapFeed((await run(sb.rpc('get_user_posts', { p_user: userId, p_before: before ?? null, p_limit: 20 }))) as Row);
     },
 
+    async getCardPosts() {
+      return ((await run(sb.rpc('get_card_posts'))) as Row[]).map(mapPost);
+    },
+
     async getPost(id) {
       return mapPost((await run(sb.rpc('get_post', { p_post: id }))) as Row);
     },
@@ -566,6 +573,7 @@ export function createSupabaseBackend(url: string, anonKey: string): Backend {
             p_verse_text: input.verseText ?? null,
             p_group: input.groupId ?? null,
             p_group_day: input.groupDay ?? null,
+            p_card: input.card ?? null,
           }),
         )) as Row,
       );
