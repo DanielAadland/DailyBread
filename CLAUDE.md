@@ -33,6 +33,7 @@ app/            Routes (Expo Router). (auth) sign-in/up, onboarding, (tabs) toda
                 feed/: feed, compose, post/[id], people, notifications, u/[username].
                 feed/groups/: list + discover, new, [id] (home), [id]/day/[day] (thread), [id]/members, [id]/settings.
                 join/[code]: invite links (signed-out visitors sign up first; lib/invite.ts keeps the code).
+                cards/: today's verse cards (full screen, outside the tabs) and cards/new (the card creator).
                 profile/moderation: admin queue.
 api/            Backend interface (types.ts) with two implementations:
                   supabase-backend.ts  production (Supabase Auth, tables with RLS, RPC functions)
@@ -40,6 +41,9 @@ api/            Backend interface (types.ts) with two implementations:
                   demo-social.ts       the social half of the demo backend, with seeded people (Sam, Jo, Maria)
                   demo-groups.ts       groups in demo mode: "Morning Psalms" (you're a member) and a public group
                 hooks.ts (React Query), access.ts (which area a visitor belongs in), BackendProvider.tsx
+cards/          Verse cards: pool.ts (70 curated cards, checked by pool.test.ts), backgrounds.ts (shapes in a
+                1000×1250 box, drawn by CardArtSvg on screen and by exportImage.ts into a PNG on the web),
+                VerseCard (4:5 tile), useDailyCards (today's set + progress kept on the device)
 bible/          StaticBibleProvider setup, chapter/passage hooks, book names, last-read position
 theme/          Design tokens ("first light" palette, Literata + Figtree, spacing) and ThemeProvider
 ui/             Txt, Button, Screen, TextField, DawnArc, VerseList, settings panels, small parts in misc.tsx;
@@ -65,6 +69,9 @@ lib/            Web Push subscription, time helpers
   direct write grants.
 - Group rules (roles, invite codes, group plan day, group streak) live in `packages/core/src/groups.ts`, mirrored in
   `supabase/migrations/20261031000100_groups.sql`.
+- Card rules (backgrounds, fonts, the daily set, text clean-up) live in `packages/core/src/cards.ts`; card posts are
+  verse posts with a `card` style (`supabase/migrations/20261101000100_cards.sql`).
+- Don't run Prettier with its defaults on this repo (it switches to double quotes); match the existing style by hand.
 - Visual check: `pnpm --filter app build:web`, serve `apps/app/dist`, screenshot with headless Chromium.
 
 ## Conventions
@@ -111,6 +118,12 @@ lib/            Web Push subscription, time helpers
 | 2026-10-31 | Group members see each other's names and "read today" status regardless of profile visibility; said plainly before joining and in the privacy policy | "Who has read today" is the point of a group. |
 | 2026-10-31 | "Cheer on" nudges: only to members who haven't read today, one per sender per person per ~day, at most 3 received a day; push respects the nudge switch, quiet hours and the daily cap | Accountability without pressure. |
 | 2026-10-31 | Group admins pin (max 3) and remove posts/comments in their group; reports still go to the app moderators | Local moderation for groups, global safety net stays. |
+| 2026-11-01 | Verse cards: a daily set of 7 curated cards (+ up to 3 recent cards from people you follow and your groups), then "You're done for today" | The brief's limited daily set; friends' cards make it personal without becoming a feed. |
+| 2026-11-01 | Curated cards ship with the app (passage + short reflection); the verse text comes from the reader's translation | No server content to manage; works in BSB and WEB alike; everyone gets the same set on the same day. |
+| 2026-11-01 | Card backgrounds are drawn, not uploaded: 12 landscapes from fixed shapes; fonts Book/Italic/Modern | Beautiful without image storage or image moderation; user cards can only pick from the fixed list. |
+| 2026-11-01 | A card post is a verse post with a `card` style (no new post type) | Reuses reactions, comments, reports and moderation; keeps the feed code simple. |
+| 2026-11-01 | Verse images (1080×1350 PNG) are made in the browser with canvas; native apps get it in Phase 6 | No server rendering; BSB/WEB are public domain, so images can be shared freely. |
+| 2026-11-01 | Card progress ("3 of 8 seen") is kept on the device | A convenience, not data worth syncing; nothing to lose if it resets. |
 
 ## Environment
 
