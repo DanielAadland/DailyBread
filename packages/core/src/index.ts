@@ -5,3 +5,4 @@ export * from './notifications';
 export * from './badges';
 export * from './social';
 export * from './groups';
+export * from './cards';
