@@ -130,5 +130,11 @@ jobs:
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
             echo "::error title=Cloudflare Pages deploy failed::$(tail -n 25 deploy.log | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+            exit "$status"
           fi
-          exit "$status"
+          # The project's address: <subdomain>.pages.dev. If the name was taken, Cloudflare adds a suffix.
+          subdomain=$(curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CLOUDFLARE_PROJECT" \
+            | sed -n 's/.*"subdomain":"\([^"]*\)".*/\1/p')
+          echo "::notice title=Website published::https://${subdomain}"
+          echo "Website: https://${subdomain}" >> "$GITHUB_STEP_SUMMARY"
